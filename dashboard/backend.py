@@ -740,9 +740,12 @@ class RouterMonitorWorker:
                 else:
                     status = "NORMAL"
 
-                now_t = time.localtime(current_ts)
+                # Router local time (Asia/Baghdad = UTC+3)
+                tz_offset = int(os.getenv("ROUTER_TZ_OFFSET", "3")) * 3600
+                router_local_ts = current_ts + tz_offset
+                now_t = time.gmtime(router_local_ts)
                 secs_today = now_t.tm_hour * 3600 + now_t.tm_min * 60 + now_t.tm_sec
-                secs_to_midnight = 86400 - secs_today
+                secs_to_midnight = max(0, 86400 - secs_today)
 
                 telemetry_data["starlink"]["daily_used_gb"] = daily_used_gb
                 telemetry_data["starlink"]["daily_used_gib"] = daily_used_gib

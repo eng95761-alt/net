@@ -1,7 +1,10 @@
 FROM python:3.11-slim
 
-# Install wget, tar and ca-certificates
-RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates && rm -rf /var/lib/apt/lists/*
+# Set timezone to Asia/Baghdad (UTC+3)
+ENV TZ=Asia/Baghdad
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install wireproxy (userspace WireGuard to SOCKS5 tunnel)
 RUN wget -qO /tmp/wireproxy.tar.gz https://github.com/windtf/wireproxy/releases/download/v1.1.3/wireproxy_linux_amd64.tar.gz && \
