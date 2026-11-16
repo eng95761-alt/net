@@ -227,6 +227,7 @@ telemetry_data: Dict[str, Any] = {
         "other_count": 0,
         "list": []
     },
+    "automation_scripts": [],
     "system_logs": [],
     "history": history_buffer,
     "events": []
@@ -264,6 +265,101 @@ class RouterMonitorWorker:
         self.ssh = None
         self.running = True
         self.cached_baseline_rx = None
+        self.cached_scripts = []
+        self.last_scripts_fetch = 0
+
+    def fetch_scripts(self):
+        if not self.ssh or (self.ssh.get_transport() and not self.ssh.get_transport().is_active()):
+            return
+        try:
+            cmd = '/system script print terse; :put "===SCHEDULERS==="; /system scheduler print terse'
+            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=5)
+            out = stdout.read().decode("utf-8", errors="ignore")
+            parts = out.split("===SCHEDULERS===")
+            scripts_raw = parts[0]
+            sched_raw = parts[1] if len(parts) > 1 else ""
+
+            sched_map = {}
+            for line in sched_raw.strip().split("\n"):
+                m_name = re.search(r"name=([^\s]+)", line)
+                m_ev = re.search(r"on-event=([^\s]+)", line)
+                m_int = re.search(r"interval=([^\s]+)", line)
+                m_next = re.search(r"next-run=([^\r\n]+)", line)
+                if m_ev:
+                    sched_map[m_ev.group(1)] = {
+                        "sched_name": m_name.group(1) if m_name else "",
+                        "interval": m_int.group(1) if m_int else "--",
+                        "next_run": m_next.group(1).strip() if m_next else "--"
+                    }
+
+            meta_map = {
+                "Script-Evening-To-Starlink": {
+                    "title_ar": "تحويل الهايبرد إلى ستارلنك (فترة الذروة 6:00 مساءً)",
+                    "desc_ar": "يقوم يومياً عند الساعة 6:00 مساءً بتحويل كافة بروفايلات الهايبرد إلى مسار ستارلنك لضمان أعلى سرعة واستقرار للألعاب والتصفح، ما لم تتجاوز كوتة الـ 145GB.",
+                    "badge": "يومي (18:00)",
+                    "badge_color": "purple",
+                    "icon": "fa-solid fa-moon text-purple-400"
+                },
+                "Script-Midnight-Reset-To-QN": {
+                    "title_ar": "تصفير كوتة ستارلنك وإعادة الهايبرد لكويك نت (منتصف الليل)",
+                    "desc_ar": "يقوم يومياً عند الساعة 12:00 منتصف الليل بتسجيل عداد البايتات الجديد، وتصفير علامة تجاوز الكوتة، وإعادة تحويل كافة مشتركي الهايبرد إلى مسار كويك نت.",
+                    "badge": "يومي (00:00)",
+                    "badge_color": "emerald",
+                    "icon": "fa-solid fa-arrows-rotate text-emerald-400"
+                },
+                "Script-Watch-Starlink-Quota": {
+                    "title_ar": "حارس كوتة ستارلنك الذكي (حماية سقف 145GB)",
+                    "desc_ar": "يعمل بشكل دوري مستمر (كل دقيقتين)، يراقب استهلاك باقة الـ 150GB، وفي حال ملامسة سقف الـ 145GB يقوم تلقائياً بتحويل كافة المشتركين فوراً إلى كويك نت منعاً لانقطاع الخدمة.",
+                    "badge": "دوري (كل دقيقتين)",
+                    "badge_color": "cyan",
+                    "icon": "fa-solid fa-shield-halved text-cyan-400"
+                }
+            }
+
+            parsed_scripts = []
+            for line in scripts_raw.strip().split("\n"):
+                line = line.strip()
+                if not line or "name=" not in line:
+                    continue
+                m_name = re.search(r"name=([^\s]+)", line)
+                if not m_name:
+                    continue
+                s_name = m_name.group(1)
+                m_last = re.search(r"last-started=([0-9\-]+ [0-9:]+)", line)
+                m_count = re.search(r"run-count=([0-9]+)", line)
+                m_src = re.search(r"source=(.*)", line)
+                clean_src = m_src.group(1).replace("rn", "\n").strip() if m_src else ""
+
+                s_sched = sched_map.get(s_name, {})
+                s_meta = meta_map.get(s_name, {
+                    "title_ar": s_name,
+                    "desc_ar": "سكربت أتمتة مخصص على الراوتر",
+                    "badge": "مجدول",
+                    "badge_color": "blue",
+                    "icon": "fa-solid fa-gear text-blue-400"
+                })
+
+                parsed_scripts.append({
+                    "name": s_name,
+                    "title_ar": s_meta["title_ar"],
+                    "desc_ar": s_meta["desc_ar"],
+                    "badge": s_meta["badge"],
+                    "badge_color": s_meta["badge_color"],
+                    "icon": s_meta["icon"],
+                    "sched_name": s_sched.get("sched_name", "--"),
+                    "interval": s_sched.get("interval", "--"),
+                    "next_run": s_sched.get("next_run", "--"),
+                    "last_started": m_last.group(1) if m_last else "--",
+                    "run_count": int(m_count.group(1)) if m_count else 0,
+                    "status": "نشط ومجدول",
+                    "source": clean_src
+                })
+
+            self.cached_scripts = parsed_scripts
+            self.last_scripts_fetch = time.time()
+            telemetry_data["automation_scripts"] = parsed_scripts
+        except Exception as e:
+            logger.error(f"Failed to fetch scripts: {e}")
 
     def connect(self):
         try:
@@ -785,6 +881,10 @@ class RouterMonitorWorker:
 
             telemetry_data["system_logs"] = parsed_logs
 
+            # 10. Fetch / Refresh Automation Scripts & Schedulers every 30 seconds
+            if time.time() - self.last_scripts_fetch > 30 or not self.cached_scripts:
+                self.fetch_scripts()
+
         except Exception as e:
             logger.error(f"Error in polling iteration: {e}")
             telemetry_data["status"] = "error"
@@ -881,6 +981,11 @@ async def get_peaks():
 @app.get("/api/logs")
 async def get_logs():
     return telemetry_data.get("system_logs", [])
+
+
+@app.get("/api/scripts")
+async def get_scripts():
+    return telemetry_data.get("automation_scripts", [])
 
 
 @app.post("/api/kick")

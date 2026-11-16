@@ -550,7 +550,39 @@
             </div>
         </div>
 
-        <!-- 5. Live Translated Arabic System Log Stream -->
+        <!-- 5. Automated Network Scripts & Schedulers Monitor -->
+        <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm sm:text-base font-bold text-white">موقف وتوثيق سكربتات الأتمتة المجدولة (Automation Scripts)</h2>
+                            <span id="scripts-count-badge" class="px-2 py-0.5 text-xs font-mono font-bold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">3 سكربتات نشطة</span>
+                        </div>
+                        <p class="text-xs text-gray-400 font-cairo">متابعة دقيقة لمواعيد تحويل الهايبرد، تصفير منتصف الليل، وحارس حماية كوتة ستارلنك 145GB</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        المجدول التلقائي يعمل
+                    </span>
+                </div>
+            </div>
+
+            <!-- Scripts Grid -->
+            <div id="scripts-container" class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div class="p-4 rounded-xl bg-cyber-900/80 border border-cyber-border text-center text-gray-400 col-span-full">
+                    <i class="fa-solid fa-spinner fa-spin text-purple-400 text-lg mb-2"></i>
+                    <div>جاري جلب موقف السكربتات المجدولة...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Live Translated Arabic System Log Stream -->
         <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
@@ -622,6 +654,39 @@
                 </button>
                 <button onclick="confirmKickUser()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-red-600/30">
                     <i class="fa-solid fa-bolt"></i> فصل الجلسة الآن
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Code Viewer Modal -->
+    <div id="script-code-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="glass-panel max-w-2xl w-full rounded-2xl p-4 sm:p-6 space-y-4 border border-purple-500/30 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-code text-purple-400"></i>
+                    <h3 id="script-modal-title" class="text-base font-bold text-white font-mono">تفاصيل كود السكربت</h3>
+                </div>
+                <button onclick="closeScriptModal()" class="w-8 h-8 rounded-lg bg-cyber-800 text-gray-400 hover:text-white transition flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-1.5">
+                <span id="script-modal-desc" class="text-xs text-gray-300 block font-cairo leading-relaxed">--</span>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono text-gray-400 pt-1">
+                    <span>المجدول: <strong id="script-modal-sched" class="text-purple-300">--</strong></span>
+                    <span>•</span>
+                    <span>التكرار: <strong id="script-modal-int" class="text-cyan-300">--</strong></span>
+                    <span>•</span>
+                    <span>التشغيل القادم: <strong id="script-modal-next" class="text-emerald-300">--</strong></span>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto rounded-xl bg-black/90 p-3.5 border border-cyber-border text-xs font-mono text-cyan-300 whitespace-pre leading-relaxed select-all" id="script-modal-code">
+                # كود السكربت...
+            </div>
+            <div class="pt-2 border-t border-cyber-border flex justify-end">
+                <button onclick="closeScriptModal()" class="px-4 py-1.5 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-gray-200 text-xs font-bold transition">
+                    إغلاق
                 </button>
             </div>
         </div>
@@ -986,6 +1051,11 @@
             if (data.system_logs) {
                 renderSystemLogs(data.system_logs);
             }
+
+            // 8. Automation Scripts
+            if (data.automation_scripts) {
+                renderAutomationScripts(data.automation_scripts);
+            }
         }
 
         // Render Quicknet 5 Lines Cards
@@ -1195,6 +1265,89 @@
                     renderSystemLogs(logs);
                 }
             } catch (e) {}
+        }
+
+        // Automation Scripts Rendering & Documentation
+        let automationScriptsCache = [];
+
+        function renderAutomationScripts(scripts) {
+            if (!scripts || !Array.isArray(scripts) || scripts.length === 0) return;
+            automationScriptsCache = scripts;
+            const container = document.getElementById('scripts-container');
+            if (!container) return;
+            const badge = document.getElementById('scripts-count-badge');
+            if (badge) badge.innerText = `${scripts.length} سكربتات نشطة`;
+
+            let html = '';
+            scripts.forEach((sc, idx) => {
+                let badgeColorClass = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+                if (sc.badge_color === 'purple') badgeColorClass = 'bg-purple-500/10 text-purple-300 border-purple-500/30';
+                else if (sc.badge_color === 'emerald') badgeColorClass = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+
+                html += `
+                    <div class="p-4 rounded-xl bg-cyber-900/90 border border-cyber-border hover:border-purple-500/40 transition flex flex-col justify-between space-y-3 shadow-lg">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2.5 py-0.5 rounded text-[11px] font-mono border ${badgeColorClass} font-bold flex items-center gap-1.5">
+                                    <i class="${sc.icon || 'fa-solid fa-code'} text-[10px]"></i>
+                                    ${sc.badge}
+                                </span>
+                                <span class="flex items-center gap-1 text-[11px] text-emerald-400 font-bold font-cairo">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    ${sc.status}
+                                </span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-bold text-white font-cairo">${sc.title_ar}</h3>
+                                <span class="text-[10px] text-gray-400 font-mono block">${sc.name}</span>
+                            </div>
+
+                            <p class="text-[11px] text-gray-400 font-cairo leading-relaxed line-clamp-3">
+                                ${sc.desc_ar}
+                            </p>
+                        </div>
+
+                        <div class="pt-2 border-t border-cyber-border/70 space-y-1.5 font-mono text-xs">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-gray-400">الموعد القادم:</span>
+                                <span class="text-emerald-400 font-bold">${sc.next_run}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-gray-400">آخر تشغيل:</span>
+                                <span class="text-gray-300">${sc.last_started}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-gray-400">مرات التنفيذ:</span>
+                                <span class="text-purple-300 font-bold">${sc.run_count} مرة</span>
+                            </div>
+
+                            <button onclick="openScriptModal(${idx})" class="w-full mt-2 py-1.5 px-3 rounded-lg bg-cyber-800 hover:bg-cyber-700 text-gray-200 text-xs font-bold font-cairo transition flex items-center justify-center gap-1.5 border border-cyber-border">
+                                <i class="fa-solid fa-file-code text-purple-400 text-xs"></i>
+                                توثيق وكود السكربت
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function openScriptModal(idx) {
+            const sc = automationScriptsCache[idx];
+            if (!sc) return;
+            document.getElementById('script-modal-title').innerText = `${sc.name} (${sc.title_ar})`;
+            document.getElementById('script-modal-desc').innerText = sc.desc_ar;
+            document.getElementById('script-modal-sched').innerText = sc.sched_name;
+            document.getElementById('script-modal-int').innerText = sc.interval;
+            document.getElementById('script-modal-next').innerText = sc.next_run;
+            document.getElementById('script-modal-code').innerText = sc.source || '# لا يوجد كود متاح';
+            document.getElementById('script-code-modal').classList.remove('hidden');
+        }
+
+        function closeScriptModal() {
+            document.getElementById('script-code-modal').classList.add('hidden');
         }
 
         // 10-Min Peak Modal Logic
