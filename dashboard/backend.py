@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import re
+import socket
+import struct
 import time
 from typing import Dict, List, Any
 import paramiko
@@ -272,6 +274,31 @@ class RouterMonitorWorker:
                     pass
             self.ssh = paramiko.SSHClient()
             self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+            # Optional SOCKS5 proxy support (e.g., userspace WireGuard / wireproxy)
+            socks_proxy = os.getenv("SOCKS5_PROXY", "").strip()
+            custom_sock = None
+            if socks_proxy:
+                try:
+                    p_host, p_port = socks_proxy.split(":")
+                    proxy_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    proxy_sock.settimeout(10)
+                    proxy_sock.connect((p_host, int(p_port)))
+                    # SOCKS5 greeting
+                    proxy_sock.sendall(b"\x05\x01\x00")
+                    g_resp = proxy_sock.recv(2)
+                    if g_resp == b"\x05\x00":
+                        d_ip = socket.inet_aton(ROUTER_IP)
+                        d_port = struct.pack(">H", int(ROUTER_PORT))
+                        proxy_sock.sendall(b"\x05\x01\x00\x01" + d_ip + d_port)
+                        c_resp = proxy_sock.recv(10)
+                        if len(c_resp) >= 2 and c_resp[1] == 0x00:
+                            custom_sock = proxy_sock
+                            logger.info(f"SOCKS5 proxy tunnel active via {socks_proxy} to {ROUTER_IP}:{ROUTER_PORT}")
+                except Exception as ex:
+                    logger.warning(f"SOCKS5 proxy attempt failed: {ex}, falling back to direct socket")
+                    custom_sock = None
+
             self.ssh.connect(
                 ROUTER_IP,
                 port=ROUTER_PORT,
@@ -279,7 +306,8 @@ class RouterMonitorWorker:
                 password=ROUTER_PASS,
                 timeout=8,
                 look_for_keys=False,
-                allow_agent=False
+                allow_agent=False,
+                sock=custom_sock
             )
             logger.info("Connected successfully to MikroTik RB4011.")
             return True
@@ -889,4 +917,5 @@ async def serve_index():
 
 
 if __name__ == "__main__":
-    uvicorn.run("backend:app", host="0.0.0.0", port=8000, reload=False)
+    srv_port = int(os.getenv("PORT", os.getenv("DASHBOARD_PORT", 8000)))
+    uvicorn.run("backend:app", host="0.0.0.0", port=srv_port, reload=False)

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: mscp-4011
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: ROUTER_IP
+        value: "192.168.216.1"
+      - key: ROUTER_PORT
+        value: "22"
+      - key: ROUTER_USER
+        sync: false
+      - key: ROUTER_PASS
+        sync: false
+      - key: WG_PRIVATE_KEY
+        sync: false
+      - key: WG_PEER_PUBLIC_KEY
+        sync: false
+      - key: WG_ENDPOINT
+        sync: false
+      - key: WG_ADDRESS
+        value: "192.168.216.2/24"
+      - key: WG_ALLOWED_IPS
+        value: "192.168.216.0/24"

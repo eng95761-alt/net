@@ -10,6 +10,11 @@ __pycache__/
 venv/
 ENV/
 
+# Backups and confidential exports
+backups/
+*.backup
+*.rsc
+
 # OS metadata
 .DS_Store
 Thumbs.db
