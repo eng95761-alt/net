@@ -171,110 +171,214 @@
         }
 
         /* ========================================================
-           LIGHT THEME: Shades of White Canvas with Executive Navy Cards
+           WORLD-CLASS LIGHT EXECUTIVE THEME (Pure White & Slate Navy)
            ======================================================== */
         body.light-theme {
-            background-color: #f1f5f9 !important;
-            background-image: 
-                radial-gradient(at 0% 0%, #ffffff 0px, transparent 55%),
-                radial-gradient(at 100% 0%, #e2e8f0 0px, transparent 55%),
-                radial-gradient(at 50% 100%, #cbd5e1 0px, transparent 65%) !important;
-            background-attachment: fixed !important;
+            background-color: #f8fafc !important;
+            background-image: none !important;
             color: #0f172a !important;
         }
 
         /* Light Theme Scrollbars */
         body.light-theme::-webkit-scrollbar-track {
-            background: #e2e8f0 !important;
+            background: #f1f5f9 !important;
         }
         body.light-theme::-webkit-scrollbar-thumb {
-            background: #94a3b8 !important;
+            background: #cbd5e1 !important;
             border-radius: 4px;
         }
         body.light-theme::-webkit-scrollbar-thumb:hover {
-            background: #0f172a !important;
+            background: #94a3b8 !important;
         }
 
-        /* Header in Light Theme: Deep Navy with Crisp White Elements */
+        /* Header in Light Theme */
         body.light-theme header.glass-panel {
-            background: #091124 !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.15) !important;
-        }
-
-        /* Tabs Row Container in Light Theme: Sleek Navy Control Pill */
-        body.light-theme #main-tabs-pill {
-            background: #0d172e !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.15) !important;
-        }
-        body.light-theme #tabs-sync-bar {
-            border-color: #cbd5e1 !important;
-        }
-        body.light-theme #tabs-sync-info {
-            color: #475569 !important;
-        }
-
-        /* All Cards in Light Theme: Deep Rich Navy Blue Surfaces with Soft Shadow */
-        body.light-theme .glass-card,
-        body.light-theme .hud-kpi-card {
-            background: linear-gradient(145deg, #0d172e 0%, #152238 100%) !important;
+            background: rgba(255, 255, 255, 0.97) !important;
             backdrop-filter: blur(16px) !important;
             -webkit-backdrop-filter: blur(16px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
-            color: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        body.light-theme header h1 {
+            color: #0f172a !important;
+        }
+        body.light-theme header p {
+            color: #64748b !important;
+        }
+        body.light-theme header .bg-cyber-800 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+        body.light-theme header button:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
         }
 
+        /* Tabs Row in Light Theme */
+        body.light-theme #tabs-sync-bar {
+            border-color: #e2e8f0 !important;
+        }
+        body.light-theme #main-tabs-pill {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: none !important;
+        }
+        body.light-theme #tabs-sync-info {
+            color: #64748b !important;
+        }
+
+        /* All Cards in Light Theme: Crisp Clean White with Soft Elevation */
+        body.light-theme .glass-card,
+        body.light-theme .hud-kpi-card {
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
+            color: #0f172a !important;
+        }
         body.light-theme .hud-kpi-card:hover,
         body.light-theme .glass-card:hover {
-            border-color: rgba(56, 189, 248, 0.4) !important;
-            box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.28) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.07), 0 6px 8px -4px rgba(0, 0, 0, 0.04) !important;
             transform: translateY(-2px);
         }
 
-        /* Ensure Text Inside Navy Cards Stays Ultra-Crisp */
-        body.light-theme .glass-card h1,
-        body.light-theme .glass-card h2,
-        body.light-theme .glass-card h3,
-        body.light-theme .hud-kpi-card h1,
-        body.light-theme .hud-kpi-card h2,
-        body.light-theme .hud-kpi-card h3 {
-            color: #ffffff !important;
+        /* Card Typography */
+        body.light-theme h1,
+        body.light-theme h2,
+        body.light-theme h3 {
+            color: #0f172a !important;
         }
-        body.light-theme .glass-card p,
-        body.light-theme .hud-kpi-card p {
-            color: #cbd5e1 !important;
+        body.light-theme .text-white {
+            color: #0f172a !important;
         }
-
-        /* Sub-cards and table elements inside Navy cards */
-        body.light-theme .glass-card .bg-cyber-900,
-        body.light-theme .hud-kpi-card .bg-cyber-900 {
-            background-color: #091021 !important;
+        body.light-theme .text-gray-200 {
+            color: #1e293b !important;
         }
-        body.light-theme .glass-card .bg-cyber-800,
-        body.light-theme .hud-kpi-card .bg-cyber-800 {
-            background-color: #121c33 !important;
+        body.light-theme .text-gray-300 {
+            color: #334155 !important;
         }
-        body.light-theme .glass-card .bg-cyber-700,
-        body.light-theme .hud-kpi-card .bg-cyber-700 {
-            background-color: #1a2744 !important;
+        body.light-theme .text-gray-400 {
+            color: #64748b !important;
         }
-        body.light-theme .glass-card .border-cyber-border,
-        body.light-theme .hud-kpi-card .border-cyber-border {
-            border-color: rgba(255, 255, 255, 0.1) !important;
+        body.light-theme .text-gray-500 {
+            color: #94a3b8 !important;
         }
 
-        /* Passcode Lock Overlay in Light Theme */
-        body.light-theme #auth-lock-overlay {
-            background: rgba(241, 245, 249, 0.94) !important;
-            backdrop-filter: blur(24px) !important;
-            -webkit-backdrop-filter: blur(24px) !important;
+        /* Metric Colors in Light Theme */
+        body.light-theme .text-cyan-400,
+        body.light-theme .text-cyan-300 {
+            color: #0284c7 !important;
         }
-        body.light-theme #auth-card-box {
-            background: #0b1329 !important;
-            border: 1px solid rgba(56, 189, 248, 0.3) !important;
-            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35) !important;
+        body.light-theme .text-purple-400,
+        body.light-theme .text-purple-300 {
+            color: #7c3aed !important;
+        }
+        body.light-theme .text-emerald-400,
+        body.light-theme .text-emerald-300 {
+            color: #059669 !important;
+        }
+        body.light-theme .text-blue-400,
+        body.light-theme .text-blue-300 {
+            color: #2563eb !important;
+        }
+        body.light-theme .text-amber-400,
+        body.light-theme .text-amber-300 {
+            color: #d97706 !important;
+        }
+
+        /* Sub-containers & pills inside cards */
+        body.light-theme .bg-cyber-900,
+        body.light-theme .bg-cyber-900\/80,
+        body.light-theme .bg-cyber-900\/50,
+        body.light-theme .bg-cyber-900\/30 {
+            background-color: #f8fafc !important;
+        }
+        body.light-theme .bg-cyber-800,
+        body.light-theme .bg-cyber-800\/60,
+        body.light-theme .bg-cyber-800\/80 {
+            background-color: #f1f5f9 !important;
+        }
+        body.light-theme .bg-cyber-700 {
+            background-color: #e2e8f0 !important;
+        }
+        body.light-theme .border-cyber-border,
+        body.light-theme .border-cyber-border\/70 {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Progress bar backgrounds */
+        body.light-theme .w-full.bg-cyber-900 {
+            background-color: #e2e8f0 !important;
+        }
+
+        /* Circle progress background */
+        body.light-theme .circle-progress-bg {
+            stroke: #e2e8f0 !important;
+        }
+
+        /* Tables in Light Theme */
+        body.light-theme table {
+            color: #0f172a !important;
+        }
+        body.light-theme table thead {
+            background-color: #f8fafc !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+        }
+        body.light-theme table thead th {
+            color: #475569 !important;
+        }
+        body.light-theme table tbody tr {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        body.light-theme table tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* Inputs, Selects & Search Bars */
+        body.light-theme input,
+        body.light-theme select {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        body.light-theme input:focus,
+        body.light-theme select:focus {
+            background-color: #ffffff !important;
+            border-color: #0284c7 !important;
+        }
+
+        /* Modals & Overlays */
+        body.light-theme #auth-lock-overlay,
+        body.light-theme #peak-modal,
+        body.light-theme #um-user-action-modal,
+        body.light-theme #um-extend-modal,
+        body.light-theme #um-group-modal,
+        body.light-theme #um-profile-modal {
+            background-color: rgba(241, 245, 249, 0.88) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+        }
+        body.light-theme #auth-card-box,
+        body.light-theme #peak-modal > div,
+        body.light-theme #um-user-action-modal > div,
+        body.light-theme #um-extend-modal > div,
+        body.light-theme #um-group-modal > div,
+        body.light-theme #um-profile-modal > div {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            color: #0f172a !important;
+        }
+
+        /* Remove glow blur in light mode */
+        body.light-theme .glow-text-cyan,
+        body.light-theme .glow-text-starlink,
+        body.light-theme .glow-text-quicknet {
+            text-shadow: none !important;
         }
 </style>
 </head>
@@ -2446,14 +2550,35 @@
 
             if (theme === 'light') {
                 body.classList.add('light-theme');
-                if (icon) icon.className = 'fa-solid fa-sun text-amber-400';
+                if (icon) icon.className = 'fa-solid fa-sun text-amber-500';
                 if (label) label.innerText = 'النمط الفاتح';
-                if (btn) btn.title = 'السمة الحالية: النمط الفاتح (تدرجات الأبيض وبطاقات كحلية). انقر للتبديل للداكن';
+                if (btn) btn.title = 'السمة الحالية: النمط الفاتح النقي (White Executive). انقر للتبديل للداكن';
             } else {
                 body.classList.remove('light-theme');
                 if (icon) icon.className = 'fa-solid fa-moon text-blue-400';
                 if (label) label.innerText = 'النمط الداكن';
                 if (btn) btn.title = 'السمة الحالية: النمط الليلي الداكن. انقر للتبديل للنمط الفاتح';
+            }
+
+            // Refresh tabs classes
+            if (typeof switchMainTab === 'function') {
+                switchMainTab(currentMainTab);
+            }
+
+            // Refresh chart grid lines
+            if (typeof bandwidthChart !== 'undefined' && bandwidthChart && bandwidthChart.options) {
+                const isLight = (theme === 'light');
+                const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(148, 163, 184, 0.08)';
+                const tickColor = isLight ? '#64748b' : '#94a3b8';
+                if (bandwidthChart.options.scales && bandwidthChart.options.scales.x) {
+                    bandwidthChart.options.scales.x.grid.color = gridColor;
+                    bandwidthChart.options.scales.x.ticks.color = tickColor;
+                }
+                if (bandwidthChart.options.scales && bandwidthChart.options.scales.y) {
+                    bandwidthChart.options.scales.y.grid.color = gridColor;
+                    bandwidthChart.options.scales.y.ticks.color = tickColor;
+                }
+                bandwidthChart.update();
             }
         }
 
@@ -2533,8 +2658,13 @@
             const crmView = document.getElementById('view-crm');
             const opsView = document.getElementById('view-ops');
 
-            const activeCls = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-cyan-500 text-black shadow-lg shadow-cyan-500/20';
-            const inactiveCls = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800';
+            const isLight = document.body.classList.contains('light-theme');
+            const activeCls = isLight
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-slate-900 text-white shadow-md'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-cyan-500 text-black shadow-lg shadow-cyan-500/20';
+            const inactiveCls = isLight
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800';
 
             if (nocView) nocView.classList.add('hidden');
             if (crmView) crmView.classList.add('hidden');
