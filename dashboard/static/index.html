@@ -198,6 +198,11 @@
                 <button onclick="window.location.reload()" title="تحديث" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyber-800 border border-cyber-border flex items-center justify-center text-gray-300 hover:text-cyan-400 transition text-xs sm:text-sm">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
+
+                <!-- Lock / Logout Button -->
+                <button onclick="logoutPasscode()" title="قفل المنظومة وتسجيل الخروج" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyber-800 border border-cyber-border flex items-center justify-center text-gray-300 hover:text-red-400 transition text-xs sm:text-sm">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -550,30 +555,80 @@
                 </div>
             </div>
 
-            <!-- Search and Controls -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-                <div class="relative w-full sm:w-80">
-                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-xs text-gray-400"></i>
-                    <input type="text" id="subscriber-search" oninput="renderSubscribers()" placeholder="بحث باسم المشترك، IP، الماك، أو السرعة..." class="w-full pr-9 pl-4 py-1.5 sm:py-2 text-xs rounded-xl bg-cyber-900 border border-cyber-border text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono">
+            <!-- Search, Sort & View Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 flex-wrap">
+                <div class="flex items-center gap-2 w-full sm:w-auto flex-1">
+                    <div class="relative flex-1 sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-xs text-gray-400"></i>
+                        <input type="text" id="subscriber-search" oninput="renderSubscribers()" placeholder="بحث باسم المشترك، IP، الماك، أو السرعة..." class="w-full pr-9 pl-4 py-1.5 sm:py-2 text-xs rounded-xl bg-cyber-900 border border-cyber-border text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono">
+                    </div>
+                    <!-- Sort Dropdown -->
+                    <select id="sub-sort-select" onchange="changeSubSortFromSelect(this.value)" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-cyber-900 border border-cyber-border text-gray-300 text-xs font-cairo focus:outline-none focus:border-cyan-500">
+                        <option value="total_mbps-desc">⚡ الأعلى سحباً</option>
+                        <option value="total_mbps-asc">⚡ الأقل سحباً</option>
+                        <option value="name-asc">🔤 الاسم (أ - ي)</option>
+                        <option value="name-desc">🔤 الاسم (ي - أ)</option>
+                        <option value="uptime-desc">⏱️ الأطول اتصالاً</option>
+                    </select>
                 </div>
-                <div class="text-[11px] text-gray-400 font-mono flex items-center gap-1.5 self-end sm:self-auto">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>تحديث السحب الفوري كل 1.5 ثانية (مرتب حسب الأعلى استهلاكاً)</span>
+
+                <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                    <!-- View Mode Toggle (Mobile / Desktop) -->
+                    <div class="flex items-center gap-1 p-1 rounded-xl bg-cyber-900 border border-cyber-border text-xs font-cairo">
+                        <button id="sub-btn-view-cards" onclick="setSubViewMode('cards')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-grip"></i>
+                            <span>بطاقات هاتف</span>
+                        </button>
+                        <button id="sub-btn-view-table" onclick="setSubViewMode('table')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm">
+                            <i class="fa-solid fa-table-list"></i>
+                            <span>جدول</span>
+                        </button>
+                    </div>
+
+                    <div class="text-[11px] text-gray-400 font-mono hidden lg:flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>تحديث السحب الفوري كل 1.5 ثانية</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Subscribers Table -->
-            <div class="overflow-x-auto rounded-xl border border-cyber-border">
+            <!-- Subscribers Table View -->
+            <div id="sub-table-wrapper" class="overflow-x-auto rounded-xl border border-cyber-border">
                 <table class="w-full text-right text-xs whitespace-nowrap">
-                    <thead class="bg-cyber-900/90 text-gray-400 border-b border-cyber-border uppercase font-mono">
+                    <thead class="bg-cyber-900/90 text-gray-400 border-b border-cyber-border uppercase font-mono select-none">
                         <tr>
                             <th class="py-3 px-3">#</th>
-                            <th class="py-3 px-3">اسم المشترك (Username)</th>
-                            <th class="py-3 px-3">السحب والرفع اللحظي (Live Rate)</th>
-                            <th class="py-3 px-3">عنوان IP</th>
+                            <th onclick="toggleSubSort('name')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <span>اسم المشترك (Username)</span>
+                                    <i id="sub-sort-icon-name" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                </div>
+                            </th>
+                            <th onclick="toggleSubSort('total_mbps')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <span>السحب والرفع اللحظي (Live Rate)</span>
+                                    <i id="sub-sort-icon-total_mbps" class="fa-solid fa-arrow-down-short-wide text-[10px] text-cyan-400"></i>
+                                </div>
+                            </th>
+                            <th onclick="toggleSubSort('ip')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <span>عنوان IP</span>
+                                    <i id="sub-sort-icon-ip" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                </div>
+                            </th>
                             <th class="py-3 px-3">عنوان MAC (Caller ID)</th>
-                            <th class="py-3 px-3">المسار والخدمة</th>
-                            <th class="py-3 px-3">مدة الاتصال (Uptime)</th>
+                            <th onclick="toggleSubSort('service')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <span>المسار والخدمة</span>
+                                    <i id="sub-sort-icon-service" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                </div>
+                            </th>
+                            <th onclick="toggleSubSort('uptime')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                <div class="flex items-center gap-1.5">
+                                    <span>مدة الاتصال (Uptime)</span>
+                                    <i id="sub-sort-icon-uptime" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                </div>
+                            </th>
                             <th class="py-3 px-3 text-center">إجراء (Kick)</th>
                         </tr>
                     </thead>
@@ -586,6 +641,11 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Subscribers Mobile Cards View -->
+            <div id="sub-cards-wrapper" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Dynamically injected cards for phones -->
             </div>
         </div>
 
@@ -733,24 +793,75 @@
                         </button>
                     </div>
 
-                    <!-- Search Input -->
-                    <div class="relative w-full lg:w-72">
-                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-xs text-gray-400"></i>
-                        <input type="text" id="um-search-input" oninput="renderUmSubscribers()" placeholder="بحث باسم المشترك، الملاحظة، IP، أو الباقة..." class="w-full pr-9 pl-4 py-1.5 sm:py-2 text-xs rounded-xl bg-cyber-900 border border-cyber-border text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono">
+                    <!-- Search, Sort & View Mode Controls -->
+                    <div class="flex items-center gap-2 w-full lg:w-auto flex-wrap">
+                        <div class="relative flex-1 sm:w-64">
+                            <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-xs text-gray-400"></i>
+                            <input type="text" id="um-search-input" oninput="renderUmSubscribers()" placeholder="بحث باسم المشترك، الملاحظة، IP، أو الباقة..." class="w-full pr-9 pl-4 py-1.5 sm:py-2 text-xs rounded-xl bg-cyber-900 border border-cyber-border text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono">
+                        </div>
+
+                        <!-- CRM Sort Dropdown -->
+                        <select id="um-sort-select" onchange="changeUmSortFromSelect(this.value)" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-cyber-900 border border-cyber-border text-gray-300 text-xs font-cairo focus:outline-none focus:border-cyan-500">
+                            <option value="default">↕ ترتيب: الافتراضي</option>
+                            <option value="username-asc">🔤 الاسم (أ - ي)</option>
+                            <option value="username-desc">🔤 الاسم (ي - أ)</option>
+                            <option value="days_left-asc">⏳ الأقرب للانتهاء أولاً</option>
+                            <option value="days_left-desc">⏳ الأطول صلاحية أولاً</option>
+                            <option value="group-asc">📦 حسب الباقة والسرعة</option>
+                            <option value="is_online-desc">🟢 المتصلين أولاً</option>
+                            <option value="is_online-asc">⚪ غير المتصلين أولاً</option>
+                        </select>
+
+                        <!-- View Mode Toggle (Mobile / Desktop) -->
+                        <div class="flex items-center gap-1 p-1 rounded-xl bg-cyber-900 border border-cyber-border text-xs font-cairo">
+                            <button id="um-btn-view-cards" onclick="setUmViewMode('cards')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white">
+                                <i class="fa-solid fa-grip"></i>
+                                <span>بطاقات هاتف</span>
+                            </button>
+                            <button id="um-btn-view-table" onclick="setUmViewMode('table')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>جدول</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto rounded-xl border border-cyber-border">
+                <!-- Table View -->
+                <div id="um-table-wrapper" class="overflow-x-auto rounded-xl border border-cyber-border">
                     <table class="w-full text-right text-xs whitespace-nowrap">
-                        <thead class="bg-cyber-900/90 text-gray-400 border-b border-cyber-border font-mono uppercase">
+                        <thead class="bg-cyber-900/90 text-gray-400 border-b border-cyber-border font-mono uppercase select-none">
                             <tr>
                                 <th class="py-3 px-3">#</th>
-                                <th class="py-3 px-3">المشترك / الموقع والملاحظات</th>
-                                <th class="py-3 px-3">حالة الاتصال والـ IP</th>
-                                <th class="py-3 px-3">الباقة الحالية (Group / Speed)</th>
-                                <th class="py-3 px-3">البروفايل والصلاحية</th>
-                                <th class="py-3 px-3">المدة المتبقية</th>
+                                <th onclick="toggleUmSort('username')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>المشترك / الموقع والملاحظات</span>
+                                        <i id="um-sort-icon-username" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                    </div>
+                                </th>
+                                <th onclick="toggleUmSort('is_online')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>حالة الاتصال والـ IP</span>
+                                        <i id="um-sort-icon-is_online" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                    </div>
+                                </th>
+                                <th onclick="toggleUmSort('group')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>الباقة الحالية (Group / Speed)</span>
+                                        <i id="um-sort-icon-group" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                    </div>
+                                </th>
+                                <th onclick="toggleUmSort('profile')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>البروفايل والصلاحية</span>
+                                        <i id="um-sort-icon-profile" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                    </div>
+                                </th>
+                                <th onclick="toggleUmSort('days_left')" class="py-3 px-3 cursor-pointer hover:text-cyan-400 transition">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>المدة المتبقية</span>
+                                        <i id="um-sort-icon-days_left" class="fa-solid fa-sort text-[10px] text-gray-500"></i>
+                                    </div>
+                                </th>
                                 <th class="py-3 px-3 text-center">إجراءات التحكم والتجديد</th>
                             </tr>
                         </thead>
@@ -763,6 +874,11 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Cards View for User Manager CRM -->
+                <div id="um-cards-wrapper" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Dynamically injected touch-friendly cards for mobile -->
                 </div>
                 <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 pt-1 gap-2">
                     <span id="um-showing-count">عرض 0 مشترك</span>
@@ -1461,13 +1577,78 @@
             container.innerHTML = html;
         }
 
-        // Render Subscribers with Live Bandwidth Rates
+        // State for Active Subscribers View & Sort
+        let subViewMode = (window.innerWidth < 768 ? 'cards' : 'table');
+        let subSortColumn = 'total_mbps';
+        let subSortDirection = 'desc';
+
+        function setSubViewMode(mode) {
+            subViewMode = mode;
+            const btnCards = document.getElementById('sub-btn-view-cards');
+            const btnTable = document.getElementById('sub-btn-view-table');
+            const wrapCards = document.getElementById('sub-cards-wrapper');
+            const wrapTable = document.getElementById('sub-table-wrapper');
+
+            if (mode === 'cards') {
+                wrapCards.classList.remove('hidden');
+                wrapCards.classList.add('grid');
+                wrapTable.classList.add('hidden');
+                btnCards.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm';
+                btnTable.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white';
+            } else {
+                wrapTable.classList.remove('hidden');
+                wrapCards.classList.add('hidden');
+                wrapCards.classList.remove('grid');
+                btnTable.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm';
+                btnCards.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white';
+            }
+            renderSubscribers();
+        }
+
+        function toggleSubSort(column) {
+            if (subSortColumn === column) {
+                subSortDirection = (subSortDirection === 'asc' ? 'desc' : 'asc');
+            } else {
+                subSortColumn = column;
+                subSortDirection = (column === 'total_mbps' ? 'desc' : 'asc');
+            }
+            const sel = document.getElementById('sub-sort-select');
+            if (sel) sel.value = `${subSortColumn}-${subSortDirection}`;
+            renderSubscribers();
+        }
+
+        function changeSubSortFromSelect(val) {
+            const parts = val.split('-');
+            if (parts.length === 2) {
+                subSortColumn = parts[0];
+                subSortDirection = parts[1];
+                renderSubscribers();
+            }
+        }
+
+        function updateSubSortIcons() {
+            const cols = ['name', 'total_mbps', 'ip', 'service', 'uptime'];
+            cols.forEach(c => {
+                const icon = document.getElementById(`sub-sort-icon-${c}`);
+                if (!icon) return;
+                if (subSortColumn === c) {
+                    icon.className = subSortDirection === 'asc'
+                        ? 'fa-solid fa-arrow-up-short-wide text-[10px] text-cyan-400'
+                        : 'fa-solid fa-arrow-down-short-wide text-[10px] text-cyan-400';
+                } else {
+                    icon.className = 'fa-solid fa-sort text-[10px] text-gray-500';
+                }
+            });
+        }
+
+        // Render Subscribers with Live Bandwidth Rates (Table + Mobile Cards)
         function renderSubscribers() {
             if (!telemetryState || !telemetryState.subscribers || !telemetryState.subscribers.list) return;
 
             const query = (document.getElementById('subscriber-search').value || '').trim().toLowerCase();
             const list = telemetryState.subscribers.list;
             const tbody = document.getElementById('subscribers-table-body');
+            const cardsContainer = document.getElementById('sub-cards-wrapper');
 
             const filtered = list.filter(item => {
                 if (currentFilter === 'starlink' && item.badge !== 'starlink') return false;
@@ -1484,32 +1665,62 @@
                 return true;
             });
 
+            // Sorting logic
+            filtered.sort((a, b) => {
+                let res = 0;
+                if (subSortColumn === 'name') {
+                    res = (a.name || '').localeCompare(b.name || '');
+                } else if (subSortColumn === 'total_mbps') {
+                    res = (a.total_mbps || 0) - (b.total_mbps || 0);
+                } else if (subSortColumn === 'ip') {
+                    res = (a.ip || '').localeCompare(b.ip || '');
+                } else if (subSortColumn === 'service') {
+                    res = (a.service || '').localeCompare(b.service || '');
+                } else if (subSortColumn === 'uptime') {
+                    res = (a.uptime || '').localeCompare(b.uptime || '');
+                }
+                return subSortDirection === 'asc' ? res : -res;
+            });
+
+            updateSubSortIcons();
+
             if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="py-8 text-center text-gray-500 font-cairo">
-                            <i class="fa-solid fa-user-slash text-lg mb-2"></i>
-                            <div>لا توجد اشتراكات مطابقة للبحث أو الفلتر المحدد</div>
-                        </td>
-                    </tr>
+                const emptyMsg = `
+                    <div class="p-8 text-center text-gray-500 font-cairo col-span-full">
+                        <i class="fa-solid fa-user-slash text-xl mb-2 text-gray-600 block"></i>
+                        <div>لا توجد اشتراكات مطابقة للبحث أو الفلتر المحدد</div>
+                    </div>
                 `;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8">${emptyMsg}</td></tr>`;
+                if (cardsContainer) cardsContainer.innerHTML = emptyMsg;
                 return;
             }
 
-            let html = '';
+            let tableHtml = '';
+            let cardsHtml = '';
+
             filtered.forEach((item, index) => {
                 let badgeHtml = '';
+                let serviceIcon = 'fa-solid fa-circle-nodes';
+                let serviceBorder = 'border-blue-500/30 text-blue-400 bg-blue-500/10';
+
                 if (item.badge === 'starlink') {
-                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center gap-1 w-fit">
-                        <i class="fa-solid fa-satellite text-[9px]"></i> Starlink
+                    serviceIcon = 'fa-solid fa-satellite';
+                    serviceBorder = 'border-purple-500/30 text-purple-400 bg-purple-500/10';
+                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${serviceBorder} flex items-center gap-1 w-fit">
+                        <i class="${serviceIcon} text-[9px]"></i> Starlink
                     </span>`;
                 } else if (item.badge === 'quicknet') {
-                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-fit">
-                        <i class="fa-solid fa-bolt text-[9px]"></i> Quicknet
+                    serviceIcon = 'fa-solid fa-bolt';
+                    serviceBorder = 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
+                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${serviceBorder} flex items-center gap-1 w-fit">
+                        <i class="${serviceIcon} text-[9px]"></i> Quicknet
                     </span>`;
                 } else if (item.badge === 'hybrid') {
-                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
-                        <i class="fa-solid fa-shuffle text-[9px]"></i> ${item.service}
+                    serviceIcon = 'fa-solid fa-shuffle';
+                    serviceBorder = 'border-amber-500/30 text-amber-400 bg-amber-500/10';
+                    badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${serviceBorder} flex items-center gap-1 w-fit">
+                        <i class="${serviceIcon} text-[9px]"></i> ${item.service}
                     </span>`;
                 } else {
                     badgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30 w-fit">Local</span>`;
@@ -1521,7 +1732,7 @@
                 const speedClass = isHeavy ? 'text-cyan-300 font-bold glow-text-cyan' : (isMedium ? 'text-emerald-300 font-bold' : 'text-gray-400');
 
                 const speedPill = `
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 font-mono">
                         <span class="flex items-center gap-1 text-[11px] ${speedClass}">
                             <i class="fa-solid fa-arrow-down text-[9px] ${isHeavy ? 'animate-bounce text-cyan-400' : ''}"></i>
                             ${item.download_mbps.toFixed(2)} M
@@ -1534,14 +1745,15 @@
                     </div>
                 `;
 
-                html += `
-                    <tr class="hover:bg-cyber-800/60 transition group">
+                // 1. Table row HTML (Desktop)
+                tableHtml += `
+                    <tr class="hover:bg-cyber-800/60 transition group font-mono">
                         <td class="py-2.5 px-3 text-gray-500">${index + 1}</td>
                         <td class="py-2.5 px-3 font-bold text-white group-hover:text-cyan-400 transition">${item.name}</td>
                         <td class="py-2.5 px-3">${speedPill}</td>
-                        <td class="py-2.5 px-3 text-cyan-300 font-mono">${item.ip}</td>
-                        <td class="py-2.5 px-3 text-gray-400 font-mono text-[11px]">${item.mac}</td>
-                        <td class="py-2.5 px-3">${badgeHtml}</td>
+                        <td class="py-2.5 px-3 text-cyan-300">${item.ip}</td>
+                        <td class="py-2.5 px-3 text-gray-400 text-[11px]">${item.mac}</td>
+                        <td class="py-2.5 px-3 font-cairo">${badgeHtml}</td>
                         <td class="py-2.5 px-3 text-gray-300">${item.uptime}</td>
                         <td class="py-2.5 px-3 text-center">
                             <button onclick="promptKickUser('${item.name}')" title="فصل جلسة المشترك" class="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/50 transition flex items-center justify-center mx-auto">
@@ -1550,9 +1762,51 @@
                         </td>
                     </tr>
                 `;
+
+                // 2. Mobile Card HTML (Phone Optimized)
+                cardsHtml += `
+                    <div class="glass-card rounded-2xl p-3.5 border border-cyber-border space-y-2.5 transition hover:border-cyan-500/30 shadow-md">
+                        <div class="flex items-center justify-between gap-2 border-b border-cyber-border/70 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="font-bold text-white text-sm font-mono tracking-wide">${item.name}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${serviceBorder} font-cairo">
+                                <i class="${serviceIcon} text-[9px] mr-1"></i> ${item.service}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 font-cairo block">السرعة اللحظية:</span>
+                                ${speedPill}
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 font-cairo block">عنوان IP:</span>
+                                <span class="text-cyan-400 font-bold text-xs block">${item.ip}</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 font-cairo block">مدة الاتصال:</span>
+                                <span class="text-gray-300 text-xs block">${item.uptime}</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 font-cairo block">الماك (MAC):</span>
+                                <span class="text-gray-400 text-[10px] block truncate">${item.mac}</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-1 flex items-center justify-end">
+                            <button onclick="promptKickUser('${item.name}')" class="w-full py-2 px-3 rounded-xl bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-bold font-cairo flex items-center justify-center gap-1.5 transition active:scale-98">
+                                <i class="fa-solid fa-power-off text-xs"></i>
+                                <span>فصل الجلسة الآن</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
 
-            tbody.innerHTML = html;
+            if (tbody) tbody.innerHTML = tableHtml;
+            if (cardsContainer) cardsContainer.innerHTML = cardsHtml;
         }
 
         function setFilter(filterType) {
@@ -1767,7 +2021,7 @@
                 const res = await fetch('/api/kick', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user })
+                    body: JSON.stringify({ username: user, auth_token: getAuthToken() })
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -1813,7 +2067,7 @@
         }
 
         // ==========================================
-        // User Manager CRM Functions
+        // User Manager CRM Functions (Sorting & Mobile Cards)
         // ==========================================
         let umSubscribersCache = [];
         let umCurrentFilter = 'all';
@@ -1821,6 +2075,73 @@
         let umAvailableProfiles = [];
         let selectedUmUser = null;
         let selectedUmAction = null;
+        let umViewMode = (window.innerWidth < 768 ? 'cards' : 'table');
+        let umSortColumn = 'default';
+        let umSortDirection = 'asc';
+
+        function setUmViewMode(mode) {
+            umViewMode = mode;
+            const btnCards = document.getElementById('um-btn-view-cards');
+            const btnTable = document.getElementById('um-btn-view-table');
+            const wrapCards = document.getElementById('um-cards-wrapper');
+            const wrapTable = document.getElementById('um-table-wrapper');
+
+            if (mode === 'cards') {
+                wrapCards.classList.remove('hidden');
+                wrapCards.classList.add('grid');
+                wrapTable.classList.add('hidden');
+                btnCards.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm';
+                btnTable.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white';
+            } else {
+                wrapTable.classList.remove('hidden');
+                wrapCards.classList.add('hidden');
+                wrapCards.classList.remove('grid');
+                btnTable.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-cyan-500 text-black shadow-sm';
+                btnCards.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-gray-400 hover:text-white';
+            }
+            renderUmSubscribers();
+        }
+
+        function toggleUmSort(col) {
+            if (umSortColumn === col) {
+                umSortDirection = (umSortDirection === 'asc' ? 'desc' : 'asc');
+            } else {
+                umSortColumn = col;
+                umSortDirection = 'asc';
+            }
+            const sel = document.getElementById('um-sort-select');
+            if (sel) sel.value = `${umSortColumn}-${umSortDirection}`;
+            renderUmSubscribers();
+        }
+
+        function changeUmSortFromSelect(val) {
+            if (val === 'default') {
+                umSortColumn = 'default';
+                umSortDirection = 'asc';
+            } else {
+                const parts = val.split('-');
+                if (parts.length === 2) {
+                    umSortColumn = parts[0];
+                    umSortDirection = parts[1];
+                }
+            }
+            renderUmSubscribers();
+        }
+
+        function updateUmSortIcons() {
+            const cols = ['username', 'is_online', 'group', 'profile', 'days_left'];
+            cols.forEach(c => {
+                const icon = document.getElementById(`um-sort-icon-${c}`);
+                if (!icon) return;
+                if (umSortColumn === c) {
+                    icon.className = umSortDirection === 'asc'
+                        ? 'fa-solid fa-arrow-up-wide-short text-[10px] text-cyan-400'
+                        : 'fa-solid fa-arrow-down-wide-short text-[10px] text-cyan-400';
+                } else {
+                    icon.className = 'fa-solid fa-sort text-[10px] text-gray-500';
+                }
+            });
+        }
 
         async function fetchUmSubscribers() {
             try {
@@ -1863,7 +2184,8 @@
         function renderUmSubscribers() {
             const list = umSubscribersCache;
             const tbody = document.getElementById('um-subscribers-table-body');
-            if (!tbody) return;
+            const cardsContainer = document.getElementById('um-cards-wrapper');
+            if (!tbody && !cardsContainer) return;
 
             // Compute counts
             let totalCnt = list.length;
@@ -1934,21 +2256,45 @@
                 return true;
             });
 
+            // Sorting logic
+            filtered.sort((a, b) => {
+                let res = 0;
+                if (umSortColumn === 'username') {
+                    res = (a.username || '').localeCompare(b.username || '');
+                } else if (umSortColumn === 'comment') {
+                    res = (a.comment || '').localeCompare(b.comment || '');
+                } else if (umSortColumn === 'is_online') {
+                    res = (a.is_online ? 1 : 0) - (b.is_online ? 1 : 0);
+                } else if (umSortColumn === 'group') {
+                    res = (a.group || '').localeCompare(b.group || '');
+                } else if (umSortColumn === 'profile') {
+                    res = (a.profile || '').localeCompare(b.profile || '');
+                } else if (umSortColumn === 'days_left') {
+                    const valA = a.days_left === null ? 99999 : a.days_left;
+                    const valB = b.days_left === null ? 99999 : b.days_left;
+                    res = valA - valB;
+                }
+                return umSortDirection === 'asc' ? res : -res;
+            });
+
+            updateUmSortIcons();
             updateElem('um-showing-count', `عرض ${filtered.length} من أصل ${totalCnt} مشترك`);
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="py-8 text-center text-gray-500 font-cairo">
-                            <i class="fa-solid fa-user-slash text-xl mb-2 text-gray-600 block"></i>
-                            <div>لا توجد اشتراكات مطابقة للبحث أو الفلتر المحدد</div>
-                        </td>
-                    </tr>
+                const emptyMsg = `
+                    <div class="p-8 text-center text-gray-500 font-cairo col-span-full">
+                        <i class="fa-solid fa-user-slash text-xl mb-2 text-gray-600 block"></i>
+                        <div>لا توجد اشتراكات مطابقة للبحث أو الفلتر المحدد</div>
+                    </div>
                 `;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7">${emptyMsg}</td></tr>`;
+                if (cardsContainer) cardsContainer.innerHTML = emptyMsg;
                 return;
             }
 
-            let html = '';
+            let tableHtml = '';
+            let cardsHtml = '';
+
             filtered.forEach((u, idx) => {
                 let grpClass = 'bg-gray-800 text-gray-300 border-gray-700';
                 let srvIcon = 'fa-solid fa-network-wired';
@@ -1965,13 +2311,13 @@
 
                 let daysBadge = '';
                 if (u.expiry_badge === 'expired') {
-                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/30">🔴 منتهي الصلاحية</span>`;
+                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/30 whitespace-nowrap">🔴 منتهي الصلاحية</span>`;
                 } else if (u.expiry_badge === 'expiring_soon') {
-                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">⚠️ متبقي ${u.days_left} يوم</span>`;
+                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 whitespace-nowrap">⚠️ متبقي ${u.days_left} يوم</span>`;
                 } else if (u.expiry_badge === 'active') {
-                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">🟢 متبقي ${u.days_left} يوم</span>`;
+                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">🟢 متبقي ${u.days_left} يوم</span>`;
                 } else {
-                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-300 border border-blue-500/30">♾️ اشتراك مفتوح</span>`;
+                    daysBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-300 border border-blue-500/30 whitespace-nowrap">♾️ اشتراك مفتوح</span>`;
                 }
 
                 const connHtml = u.is_online ? `
@@ -1989,9 +2335,10 @@
                     </div>
                 `;
 
-                html += `
+                // 1. Desktop Table Row
+                tableHtml += `
                     <tr class="hover:bg-cyber-900/40 transition">
-                        <td class="py-2.5 px-3 text-gray-500">${idx + 1}</td>
+                        <td class="py-2.5 px-3 text-gray-500 font-mono">${idx + 1}</td>
                         <td class="py-2.5 px-3">
                             <div class="flex items-center gap-2">
                                 <div class="w-7 h-7 rounded-lg bg-cyber-800 border border-cyber-border flex items-center justify-center text-xs font-bold ${u.disabled ? 'text-gray-500' : 'text-cyan-400'}">
@@ -1999,7 +2346,7 @@
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="font-bold text-white text-xs">${u.username}</span>
+                                        <span class="font-bold text-white text-xs font-mono">${u.username}</span>
                                         ${u.disabled ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-red-500/20 text-red-400 font-bold font-cairo">معطل</span>' : ''}
                                     </div>
                                     <span class="text-[10px] text-gray-400 block font-cairo truncate max-w-[200px]">${u.comment || 'لا توجد ملاحظة'}</span>
@@ -2010,15 +2357,15 @@
                             ${connHtml}
                         </td>
                         <td class="py-2.5 px-3">
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${grpClass} inline-flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${grpClass} inline-flex items-center gap-1.5 font-mono">
                                 <i class="${srvIcon} text-[10px]"></i>
                                 <span>${u.group}</span>
                             </span>
                         </td>
                         <td class="py-2.5 px-3">
                             <div>
-                                <span class="text-gray-200 font-bold block">${u.profile}</span>
-                                <span class="text-[10px] text-gray-400">${u.end_time}</span>
+                                <span class="text-gray-200 font-bold block text-xs">${u.profile}</span>
+                                <span class="text-[10px] text-gray-400 font-mono">${u.end_time}</span>
                             </div>
                         </td>
                         <td class="py-2.5 px-3">
@@ -2026,24 +2373,20 @@
                         </td>
                         <td class="py-2.5 px-3 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <!-- Quick Renew Button -->
                                 <button onclick="openRenewModal('${u.username}')" title="تجديد الاشتراك (30 Day)" class="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold transition flex items-center gap-1">
                                     <i class="fa-solid fa-bolt text-[10px]"></i>
                                     <span>تجديد</span>
                                 </button>
                                 
-                                <!-- Change Group / Profile Button -->
                                 <button onclick="openChangeModal('${u.username}')" title="تغيير الباقة / السرعة / البروفايل" class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1">
                                     <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-                                    <span>تغيير الباقة</span>
+                                    <span>تغيير</span>
                                 </button>
 
-                                <!-- Toggle Enable/Disable Button -->
                                 <button onclick="promptToggleStatus('${u.username}', ${u.disabled})" title="${u.disabled ? 'تفعيل الحساب' : 'تعطيل الحساب'}" class="w-7 h-7 rounded-lg ${u.disabled ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20'} border flex items-center justify-center text-xs transition">
                                     <i class="fa-solid ${u.disabled ? 'fa-lock-open' : 'fa-lock'}"></i>
                                 </button>
 
-                                <!-- Kick Button (Only if online) -->
                                 ${u.is_online ? `
                                     <button onclick="promptKickUser('${u.username}')" title="فصل الجلسة الحالية فوراً" class="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 flex items-center justify-center text-xs transition">
                                         <i class="fa-solid fa-power-off"></i>
@@ -2053,9 +2396,87 @@
                         </td>
                     </tr>
                 `;
+
+                // 2. Touch-Friendly Mobile Card (High readability, finger-friendly action buttons)
+                cardsHtml += `
+                    <div class="glass-card rounded-2xl p-4 border border-cyber-border space-y-3 transition hover:border-cyan-500/30 shadow-lg relative overflow-hidden">
+                        <!-- Top Header Row -->
+                        <div class="flex items-start justify-between gap-2 border-b border-cyber-border/70 pb-2.5">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl bg-cyber-900 border border-cyber-border flex items-center justify-center text-sm font-bold ${u.disabled ? 'text-gray-500' : 'text-cyan-400'}">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-white text-sm font-mono tracking-wide">${u.username}</span>
+                                        ${u.disabled ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-red-500/20 text-red-400 font-bold font-cairo">🔒 معطل</span>' : ''}
+                                    </div>
+                                    <span class="text-[11px] text-gray-300 block font-cairo">${u.comment || 'بدون ملاحظة أو موقع'}</span>
+                                </div>
+                            </div>
+                            <div>
+                                ${u.is_online ? `
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> متصل
+                                    </span>
+                                ` : `
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-500/10 text-gray-400 border border-gray-500/30">
+                                        ⚪ أوفلاين
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+
+                        <!-- 2x2 Clean Details Grid -->
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 block font-cairo">📦 الباقة والسرعة:</span>
+                                <span class="font-bold text-amber-300 text-xs font-mono block truncate">${u.group}</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 block font-cairo">⏳ الصلاحية المتبقية:</span>
+                                <div>${daysBadge}</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border">
+                                <span class="text-[10px] text-gray-400 block font-cairo">📅 تاريخ الانتهاء:</span>
+                                <span class="text-gray-300 font-mono text-[10px] block">${u.end_time || '--'}</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-cyber-900/80 border border-cyber-border font-mono">
+                                <span class="text-[10px] text-gray-400 font-cairo block">🌐 الـ IP والسحب:</span>
+                                <span class="text-cyan-400 font-bold text-xs block">${u.is_online ? u.live_ip : '--'}</span>
+                                ${u.is_online ? `<span class="text-[10px] text-emerald-300 block">${u.live_rate_str}</span>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Touch-Friendly Large Mobile Actions -->
+                        <div class="grid grid-cols-3 gap-2 pt-1 border-t border-cyber-border/70">
+                            <button onclick="openRenewModal('${u.username}')" class="py-2 px-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold font-cairo flex items-center justify-center gap-1.5 transition active:scale-95">
+                                <i class="fa-solid fa-bolt text-cyan-400 text-xs"></i>
+                                <span>تجديد</span>
+                            </button>
+
+                            <button onclick="openChangeModal('${u.username}')" class="py-2 px-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold font-cairo flex items-center justify-center gap-1.5 transition active:scale-95">
+                                <i class="fa-solid fa-arrows-rotate text-amber-400 text-xs"></i>
+                                <span>تغيير</span>
+                            </button>
+
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="promptToggleStatus('${u.username}', ${u.disabled})" title="${u.disabled ? 'تفعيل' : 'تعطيل'}" class="flex-1 py-2 rounded-xl ${u.disabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'} text-xs font-bold flex items-center justify-center transition active:scale-95">
+                                    <i class="fa-solid ${u.disabled ? 'fa-lock-open' : 'fa-lock'}"></i>
+                                </button>
+                                ${u.is_online ? `
+                                    <button onclick="promptKickUser('${u.username}')" title="فصل الجلسة" class="w-10 py-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold flex items-center justify-center transition active:scale-95">
+                                        <i class="fa-solid fa-power-off"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
 
-            tbody.innerHTML = html;
+            if (tbody) tbody.innerHTML = tableHtml;
+            if (cardsContainer) cardsContainer.innerHTML = cardsHtml;
         }
 
         function getUmUser(uname) {
@@ -2094,7 +2515,7 @@
                 const res = await fetch('/api/usermanager/renew', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: uname, profile: profile })
+                    body: JSON.stringify({ username: uname, profile: profile, auth_token: getAuthToken() })
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -2208,7 +2629,8 @@
                         username: uname,
                         group: group,
                         profile: profile,
-                        kick: kick
+                        kick: kick,
+                        auth_token: getAuthToken()
                     })
                 });
                 const result = await res.json();
@@ -2277,7 +2699,7 @@
                 const res = await fetch('/api/usermanager/toggle-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: uname, enable: targetEnable })
+                    body: JSON.stringify({ username: uname, enable: targetEnable, auth_token: getAuthToken() })
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -2295,13 +2717,230 @@
             }
         }
 
+
+        // ==========================================
+        // Passcode Authentication (aann772010)
+        // ==========================================
+        const DASHBOARD_EXPECTED_PASSCODE = "aann772010";
+        let currentAuthToken = localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+
+        function getAuthToken() {
+            return currentAuthToken || localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+        }
+
+        function setAuthToken(token, remember = true) {
+            currentAuthToken = token;
+            if (remember) {
+                localStorage.setItem("mscp_auth_token", token);
+                sessionStorage.removeItem("mscp_auth_token");
+            } else {
+                sessionStorage.setItem("mscp_auth_token", token);
+                localStorage.removeItem("mscp_auth_token");
+            }
+        }
+
+        function clearAuthToken() {
+            currentAuthToken = "";
+            localStorage.removeItem("mscp_auth_token");
+            sessionStorage.removeItem("mscp_auth_token");
+        }
+
+        function checkAuthStatus() {
+            const token = getAuthToken();
+            const overlay = document.getElementById('auth-lock-overlay');
+            if (token) {
+                if (overlay) overlay.classList.add('hidden');
+                return true;
+            } else {
+                if (overlay) overlay.classList.remove('hidden');
+                const input = document.getElementById('passcode-input');
+                if (input) setTimeout(() => input.focus(), 150);
+                return false;
+            }
+        }
+
+        function togglePasscodeVisibility() {
+            const input = document.getElementById('passcode-input');
+            const icon = document.getElementById('passcode-eye-icon');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        async function handlePasscodeSubmit(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('passcode-input');
+            const errDiv = document.getElementById('passcode-error');
+            const btn = document.getElementById('passcode-submit-btn');
+            const remember = document.getElementById('passcode-remember') ? document.getElementById('passcode-remember').checked : true;
+            const cardBox = document.getElementById('auth-card-box');
+
+            if (!input) return;
+            const code = input.value.trim();
+
+            if (!code) {
+                if (errDiv) {
+                    errDiv.innerText = "يرجى كتابة رمز الدخول";
+                    errDiv.classList.remove('hidden');
+                }
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passcode: code })
+                });
+                const data = await res.json();
+                if (data.success && data.token) {
+                    setAuthToken(data.token, remember);
+                    if (errDiv) errDiv.classList.add('hidden');
+                    const overlay = document.getElementById('auth-lock-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        overlay.style.transition = 'opacity 0.4s ease';
+                        setTimeout(() => {
+                            overlay.classList.add('hidden');
+                            overlay.style.opacity = '1';
+                        }, 400);
+                    }
+                    showToast("🔓 تم التحقق بنجاح، مرحباً بك في المنظومة", "login");
+                    playChime('login');
+                    
+                    // Trigger first data fetches
+                    initChart();
+                    fetchTelemetryRest();
+                    connectWebSocket();
+                    fetchUmSubscribers();
+                } else {
+                    if (errDiv) {
+                        errDiv.innerText = data.message || "رمز الدخول غير صحيح، حاول مجدداً";
+                        errDiv.classList.remove('hidden');
+                    }
+                    if (cardBox) {
+                        cardBox.classList.add('translate-x-2');
+                        setTimeout(() => cardBox.classList.remove('translate-x-2'), 100);
+                        setTimeout(() => cardBox.classList.add('-translate-x-2'), 200);
+                        setTimeout(() => cardBox.classList.remove('-translate-x-2'), 300);
+                    }
+                    playChime('alert');
+                }
+            } catch (ex) {
+                // Fallback check against preset passcode
+                if (code === DASHBOARD_EXPECTED_PASSCODE) {
+                    setAuthToken("mscp_local_token_verified", remember);
+                    document.getElementById('auth-lock-overlay').classList.add('hidden');
+                    showToast("🔓 تم تسجيل الدخول بنجاح", "login");
+                    initChart();
+                    fetchTelemetryRest();
+                    connectWebSocket();
+                    fetchUmSubscribers();
+                } else {
+                    if (errDiv) {
+                        errDiv.innerText = "رمز الدخول غير صحيح، حاول مجدداً";
+                        errDiv.classList.remove('hidden');
+                    }
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>تسجيل الدخول</span> <i class="fa-solid fa-arrow-left"></i>';
+            }
+        }
+
+        function logoutPasscode() {
+            clearAuthToken();
+            const input = document.getElementById('passcode-input');
+            if (input) input.value = '';
+            const errDiv = document.getElementById('passcode-error');
+            if (errDiv) errDiv.classList.add('hidden');
+            const overlay = document.getElementById('auth-lock-overlay');
+            if (overlay) overlay.classList.remove('hidden');
+            showToast("🔒 تم قفل المنظومة وتسجيل الخروج", "logout");
+            playChime('logout');
+        }
+
         // Init on page load
         window.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            fetchTelemetryRest();
-            connectWebSocket();
-            fetchUmSubscribers();
+            // Apply initial responsive view modes
+            if (window.innerWidth < 768) {
+                setSubViewMode('cards');
+                setUmViewMode('cards');
+            } else {
+                setSubViewMode('table');
+                setUmViewMode('table');
+            }
+
+            // Check Passcode Authentication Gate
+            const isAuth = checkAuthStatus();
+            if (isAuth) {
+                initChart();
+                fetchTelemetryRest();
+                connectWebSocket();
+                fetchUmSubscribers();
+            }
         });
     </script>
+    <!-- Passcode Authentication Lock Screen Overlay -->
+    <div id="auth-lock-overlay" class="fixed inset-0 z-[9999] bg-[#07090e]/95 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div id="auth-card-box" class="glass-panel max-w-sm w-full rounded-3xl p-6 sm:p-8 space-y-6 border border-cyan-500/30 text-center shadow-2xl shadow-cyan-950/50 relative overflow-hidden transition-all duration-300">
+            <!-- Ambient Glow -->
+            <div class="absolute -right-20 -top-20 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Lock Icon -->
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center mx-auto text-2xl text-black shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <!-- Title & Notice -->
+            <div class="space-y-1">
+                <h2 class="text-lg font-black text-white font-tech tracking-wider">MSCP RB4011</h2>
+                <h3 class="text-sm font-bold text-cyan-400 font-cairo">منظومة المراقبة والتحكم الذكية</h3>
+                <p class="text-xs text-gray-400 font-cairo pt-1">يرجى إدخال رمز الدخول للمتابعة</p>
+            </div>
+
+            <!-- Form -->
+            <form onsubmit="handlePasscodeSubmit(event)" class="space-y-4">
+                <div class="relative">
+                    <i class="fa-solid fa-key absolute right-3.5 top-3.5 text-xs text-gray-400"></i>
+                    <input type="password" id="passcode-input" autocomplete="current-password" autofocus placeholder="رمز الدخول..." class="w-full pr-10 pl-10 py-2.5 rounded-xl bg-cyber-900 border border-cyber-border text-white text-center font-mono tracking-widest text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition shadow-inner">
+                    <button type="button" onclick="togglePasscodeVisibility()" class="absolute left-3.5 top-3.5 text-xs text-gray-400 hover:text-cyan-400 transition">
+                        <i id="passcode-eye-icon" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+
+                <!-- Error feedback -->
+                <div id="passcode-error" class="hidden text-xs text-red-400 font-cairo font-bold bg-red-500/10 py-2 px-3 rounded-lg border border-red-500/20">
+                    <i class="fa-solid fa-circle-exclamation ml-1"></i> رمز الدخول غير صحيح، حاول مجدداً
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-gray-400 font-cairo px-1">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="passcode-remember" checked class="rounded bg-cyber-800 border-gray-600 text-cyan-500 focus:ring-0">
+                        <span>تذكر الدخول على هذا الجهاز</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="passcode-submit-btn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-xs font-cairo shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                    <span>تسجيل الدخول</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </form>
+
+            <div class="text-[10px] text-gray-500 font-mono">
+                Protected Cloud Gateway • RouterOS 7.25.1
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
+import hashlib
 import json
 import logging
 import os
@@ -42,6 +43,16 @@ ROUTER_IP = os.getenv("ROUTER_IP", "192.168.4.238")
 ROUTER_PORT = int(os.getenv("ROUTER_PORT", "22"))
 ROUTER_USER = os.getenv("ROUTER_USER", "admin")
 ROUTER_PASS = os.getenv("ROUTER_PASS", "")
+
+DASHBOARD_PASSCODE = os.getenv("DASHBOARD_PASSCODE", "aann772010").strip()
+AUTH_TOKEN = hashlib.sha256(f"{DASHBOARD_PASSCODE}-mscp-secure-salt-2026".encode()).hexdigest()
+
+def check_auth_token(token_or_pass: str) -> bool:
+    if not DASHBOARD_PASSCODE:
+        return True
+    if not token_or_pass:
+        return False
+    return token_or_pass.strip() in (AUTH_TOKEN, DASHBOARD_PASSCODE)
 
 # Rolling history for live bandwidth charts (last 30 samples = ~45s)
 history_buffer = {
@@ -1196,6 +1207,28 @@ async def websocket_endpoint(websocket: WebSocket):
             active_websockets.remove(websocket)
 
 
+# Authentication Endpoints
+@app.post("/api/auth/login")
+async def auth_login(payload: Dict[str, Any]):
+    passcode = payload.get("passcode", "").strip()
+    if check_auth_token(passcode):
+        return {
+            "success": True,
+            "token": AUTH_TOKEN,
+            "message": "تم تسجيل الدخول بنجاح"
+        }
+    return {
+        "success": False,
+        "message": "رمز الدخول غير صحيح، يرجى المحاولة مجدداً"
+    }
+
+
+@app.post("/api/auth/verify")
+async def auth_verify(payload: Dict[str, Any]):
+    token = payload.get("token", "").strip()
+    return {"valid": check_auth_token(token)}
+
+
 # REST Endpoints
 @app.get("/api/telemetry")
 async def get_telemetry():
@@ -1223,7 +1256,10 @@ async def get_scripts():
 
 
 @app.post("/api/kick")
-async def kick_subscriber(payload: Dict[str, str]):
+async def kick_subscriber(payload: Dict[str, Any]):
+    auth_tok = payload.get("auth_token", "").strip()
+    if not check_auth_token(auth_tok):
+        return {"success": False, "message": "غير مصرح - الرجاء إدخال رمز الدخول أولاً"}
     user = payload.get("username")
     if not user:
         return {"success": False, "message": "Username is required"}
@@ -1262,6 +1298,9 @@ async def get_um_groups():
 
 @app.post("/api/usermanager/renew")
 async def renew_um_subscriber(payload: Dict[str, Any]):
+    auth_tok = payload.get("auth_token", "").strip()
+    if not check_auth_token(auth_tok):
+        return {"success": False, "message": "غير مصرح - الرجاء إدخال رمز الدخول أولاً"}
     user = payload.get("username", "").strip()
     profile = payload.get("profile", "30 Day").strip()
     if not user:
@@ -1288,6 +1327,9 @@ async def renew_um_subscriber(payload: Dict[str, Any]):
 
 @app.post("/api/usermanager/change-group")
 async def change_um_subscriber_group(payload: Dict[str, Any]):
+    auth_tok = payload.get("auth_token", "").strip()
+    if not check_auth_token(auth_tok):
+        return {"success": False, "message": "غير مصرح - الرجاء إدخال رمز الدخول أولاً"}
     user = payload.get("username", "").strip()
     group = payload.get("group", "").strip()
     profile = payload.get("profile", "").strip()
@@ -1334,6 +1376,9 @@ async def change_um_subscriber_group(payload: Dict[str, Any]):
 
 @app.post("/api/usermanager/toggle-status")
 async def toggle_um_subscriber_status(payload: Dict[str, Any]):
+    auth_tok = payload.get("auth_token", "").strip()
+    if not check_auth_token(auth_tok):
+        return {"success": False, "message": "غير مصرح - الرجاء إدخال رمز الدخول أولاً"}
     user = payload.get("username", "").strip()
     enable = payload.get("enable", True)
     if not user:
