@@ -119,7 +119,48 @@
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-    </style>
+    
+        /* Modern Minimalist Cyber Theme */
+        .modern-theme {
+            background-color: #07090e;
+        }
+        .modern-theme .glass-panel {
+            background: rgba(10, 14, 23, 0.85) !important;
+            backdrop-filter: blur(18px) !important;
+            -webkit-backdrop-filter: blur(18px) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+        }
+        .modern-theme .glass-card {
+            background: rgba(14, 19, 32, 0.72) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35) !important;
+        }
+        .modern-theme .glass-card:hover {
+            border-color: rgba(0, 243, 255, 0.22) !important;
+            box-shadow: 0 12px 30px -10px rgba(0, 243, 255, 0.12) !important;
+        }
+        .modern-theme .glow-text-cyan,
+        .modern-theme .glow-text-starlink,
+        .modern-theme .glow-text-quicknet {
+            text-shadow: none !important;
+        }
+        .hud-kpi-card {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(13, 18, 30, 0.75) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 1rem;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+        .hud-kpi-card:hover {
+            border-color: rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -10px rgba(0, 243, 255, 0.15);
+        }
+</style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
 
@@ -184,6 +225,11 @@
 
             <!-- Action Controls -->
             <div class="flex items-center gap-1.5 flex-shrink-0">
+                <!-- Design Mode Toggle Button -->
+                <button id="design-mode-btn" onclick="toggleDesignMode()" title="تبديل مظهر اللوحة (عصري مبسط / كلاسيكي كامل)" class="px-2 sm:px-3 py-1.5 rounded-lg bg-cyber-800 border border-cyber-border hover:border-cyan-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm text-gray-200">
+                    <i id="design-mode-icon" class="fa-solid fa-gem text-cyan-400"></i>
+                    <span id="design-mode-label" class="hidden md:inline font-cairo">التصميم العصري</span>
+                </button>
                 <!-- Sound Toggle -->
                 <button id="sound-btn" onclick="toggleSound()" title="تشغيل / كتم التنبيهات الصوتية" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyber-800 border border-cyber-border flex items-center justify-center text-gray-300 hover:text-cyan-400 transition text-xs sm:text-sm">
                     <i id="sound-icon" class="fa-solid fa-volume-high"></i>
@@ -220,6 +266,10 @@
                     <span>إدارة واشتراكات المشتركين (User Manager CRM)</span>
                     <span id="tab-crm-badge" class="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-500/20 text-cyan-300 font-mono font-bold">0</span>
                 </button>
+                <button id="tab-btn-ops" onclick="switchMainTab('ops')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800">
+                    <i class="fa-solid fa-sliders text-purple-400"></i>
+                    <span>العمليات والسكربتات والسجلات (Operations)</span>
+                </button>
             </div>
             <div class="hidden sm:flex items-center gap-3 text-xs text-gray-400 font-mono">
                 <span class="flex items-center gap-1.5">
@@ -237,6 +287,126 @@
         <!-- NOC Live View Container -->
         <div id="view-noc" class="space-y-5">
 
+        <!-- Modern Minimalist HUD Ticker Section -->
+        <div id="modern-hud-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- 1. Combined Network Throughput -->
+            <div class="hud-kpi-card flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-300 block font-cairo">سرعة الشبكة الإجمالية</span>
+                            <span class="text-[9px] text-gray-500 font-mono">Combined WAN</span>
+                        </div>
+                    </div>
+                    <span id="modern-hud-health" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">طبيعي ومستقر</span>
+                </div>
+                <div class="my-1">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="modern-hud-rx" class="text-2xl sm:text-3xl font-black text-cyan-400 font-mono tracking-tight">0.00 Mbps</span>
+                        <span class="text-xs text-cyan-400/70 font-cairo">سحب</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs font-mono text-gray-400 mt-1">
+                        <span id="modern-hud-tx" class="text-gray-300">⬆ 0.00 Mbps رفع</span>
+                        <button onclick="openPeakModal()" class="text-[11px] text-amber-400/90 hover:text-amber-300 flex items-center gap-1 transition">
+                            <i class="fa-solid fa-chart-column text-[10px]"></i>
+                            <span class="underline">سجل القمم</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Starlink Daily Quota -->
+            <div class="hud-kpi-card flex flex-col justify-between border-purple-500/20">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-sm">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-300 block font-cairo">كوتة ستارلنك اليومية</span>
+                            <span class="text-[9px] text-gray-500 font-mono">150 GB ether1-ISP</span>
+                        </div>
+                    </div>
+                    <span id="modern-hud-star-timer" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 whitespace-nowrap">⏳ تصفير: --:--:--</span>
+                </div>
+                <div class="my-1">
+                    <div class="flex items-baseline justify-between">
+                        <div class="flex items-baseline gap-1.5">
+                            <span id="modern-hud-star-rem" class="text-2xl sm:text-3xl font-black text-purple-300 font-mono tracking-tight">0.0 GB</span>
+                            <span class="text-xs text-purple-400/70 font-cairo">متبقي</span>
+                        </div>
+                        <span id="modern-hud-star-pct" class="text-xs font-mono text-purple-400 font-bold">0% مستهلك</span>
+                    </div>
+                    <div class="w-full bg-cyber-900 rounded-full h-1.5 mt-2 overflow-hidden border border-purple-500/20">
+                        <div id="modern-hud-star-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] font-mono text-gray-400 mt-1">
+                        <span id="modern-hud-star-speed">⬇ 0.0 | ⬆ 0.0 Mbps</span>
+                        <span class="text-[10px] text-gray-500 font-cairo">فوري</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Quicknet 5-Lines Balancer -->
+            <div class="hud-kpi-card flex flex-col justify-between border-emerald-500/20">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-300 block font-cairo">موازن كويك نت اللاسلكي</span>
+                            <span class="text-[9px] text-gray-500 font-mono">5x PCC Balancer</span>
+                        </div>
+                    </div>
+                    <span id="modern-hud-qn-lines" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">5/5 نشطة</span>
+                </div>
+                <div class="my-1">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="modern-hud-qn-rx" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight">0.00 Mbps</span>
+                        <span class="text-xs text-emerald-400/70 font-cairo">سحب</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs font-mono text-gray-400 mt-1">
+                        <span id="modern-hud-qn-total-gb" class="text-emerald-300 font-bold">📊 تراكمي: 0.0 GB</span>
+                        <span id="modern-hud-qn-speed" class="text-gray-400">⬆ 0.0 Mbps</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Active Subscribers & CRM -->
+            <div class="hud-kpi-card flex flex-col justify-between border-blue-500/20">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-sm">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-300 block font-cairo">المشتركون والاتصال</span>
+                            <span class="text-[9px] text-gray-500 font-mono">PPPoE Sessions</span>
+                        </div>
+                    </div>
+                    <button onclick="switchMainTab('crm')" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition flex items-center gap-1">
+                        <span>إدارة CRM</span>
+                        <i class="fa-solid fa-arrow-left text-[9px]"></i>
+                    </button>
+                </div>
+                <div class="my-1">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="modern-hud-subs-online" class="text-2xl sm:text-3xl font-black text-blue-400 font-mono tracking-tight">0 متصل</span>
+                        <span class="text-xs text-blue-400/70 font-cairo">الآن</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs font-cairo text-gray-400 mt-1">
+                        <span id="modern-hud-subs-total" class="text-gray-300">من أصل -- مشترك</span>
+                        <span class="text-[10px] text-emerald-400 font-mono font-bold">● PPPoE Live</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="legacy-hero-section" class="space-y-5 hidden">
         <!-- 1. AI Congestion Analyzer & Combined Throughput Hero Section -->
         <div class="glass-card rounded-2xl p-4 sm:p-6 relative overflow-hidden border-cyan-500/20 shadow-xl shadow-cyan-950/20">
             <div class="absolute -right-20 -top-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -322,6 +492,8 @@
                     </p>
                 </div>
             </div>
+        </div>
+
         </div>
 
         <!-- 2. Dual WAN Cards: Starlink (ether1) & Quicknet 5-Lines Balancer -->
@@ -650,7 +822,7 @@
         </div>
 
         <!-- 5. Automated Network Scripts & Schedulers Monitor -->
-        <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-4">
+        <div id="ops-scripts-card" class="glass-card rounded-2xl p-4 sm:p-6 space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
@@ -682,7 +854,7 @@
         </div>
 
         <!-- 6. Live Translated Arabic System Log Stream -->
-        <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-3">
+        <div id="ops-logs-card" class="glass-card rounded-2xl p-4 sm:p-6 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-terminal text-cyan-400"></i>
@@ -887,6 +1059,38 @@
             </div>
         </div>
         <!-- End of Subscribers Management View -->
+        <!-- Operations & Automation Hub Container (Tab 3 in Modern Mode) -->
+        <div id="view-ops" class="space-y-5 hidden">
+            <!-- Operations Hub Header Card -->
+            <div class="glass-card rounded-2xl p-4 sm:p-6 border-purple-500/20 relative overflow-hidden">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl shadow-lg shadow-purple-500/10 flex-shrink-0">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-base sm:text-lg font-black text-white font-cairo">مركز العمليات والأتمتة وسجلات النظام (Operations Hub)</h2>
+                                <span class="px-2 py-0.5 text-xs font-mono font-bold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">سجل الأحداث والمجدولات</span>
+                            </div>
+                            <p class="text-xs text-gray-400 font-cairo">مراقبة وتوثيق سكربتات تحويل المسارات التلقائية، تصفير كوتة ستارلنك اليومية، وسجلات أحداث المايكروتك المترجمة</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openPeakModal()" class="px-3 py-1.5 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-xs font-bold text-amber-400 border border-amber-500/30 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column"></i>
+                            <span>تقرير ذروات 10 دقائق (24h)</span>
+                        </button>
+                        <button onclick="fetchLogs()" class="px-3 py-1.5 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-xs font-bold text-cyan-400 border border-cyan-500/30 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            <span>تحديث السجلات</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- In Modern mode, ops-scripts-card and ops-logs-card are moved here dynamically via JS -->
+        </div>
     </main>
 
     <!-- 10-Minute Peak Analyzer Modal -->
@@ -1512,6 +1716,70 @@
             if (data.available_profiles) {
                 umAvailableProfiles = data.available_profiles;
             }
+            // 10. Modern HUD Elements Real-time Sync
+            if (data.network_summary) {
+                const ns = data.network_summary;
+                const mRx = document.getElementById('modern-hud-rx');
+                const mTx = document.getElementById('modern-hud-tx');
+                const mHealth = document.getElementById('modern-hud-health');
+                if (mRx) mRx.innerText = `${ns.combined_rx_mbps ? ns.combined_rx_mbps.toFixed(2) : '0.00'} Mbps`;
+                if (mTx) mTx.innerText = `⬆ ${ns.combined_tx_mbps ? ns.combined_tx_mbps.toFixed(2) : '0.00'} Mbps رفع`;
+                if (mHealth) {
+                    mHealth.innerText = ns.load_label || 'طبيعي ومستقر';
+                    if (ns.load_color === 'red') {
+                        mHealth.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse whitespace-nowrap';
+                    } else if (ns.load_color === 'amber' || ns.load_color === 'orange') {
+                        mHealth.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 whitespace-nowrap';
+                    } else {
+                        mHealth.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 whitespace-nowrap';
+                    }
+                }
+            }
+
+            if (data.starlink) {
+                const s = data.starlink;
+                const mRem = document.getElementById('modern-hud-star-rem');
+                const mPct = document.getElementById('modern-hud-star-pct');
+                const mBar = document.getElementById('modern-hud-star-bar');
+                const mTimer = document.getElementById('modern-hud-star-timer');
+                const mSpeed = document.getElementById('modern-hud-star-speed');
+                if (mRem) mRem.innerText = `${(s.daily_remaining_gb || 0).toFixed(1)} GB`;
+                if (mPct) mPct.innerText = `${(s.daily_usage_pct || 0).toFixed(1)}% مستهلك`;
+                if (mBar) mBar.style.width = `${Math.min(100, s.daily_usage_pct || 0)}%`;
+                if (mSpeed) mSpeed.innerText = `⬇ ${(s.current_rx_mbps || 0).toFixed(1)} | ⬆ ${(s.current_tx_mbps || 0).toFixed(1)} Mbps`;
+                if (mTimer && s.seconds_to_midnight !== undefined) {
+                    const sec = s.seconds_to_midnight;
+                    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+                    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+                    const sc = (sec % 60).toString().padStart(2, '0');
+                    mTimer.innerText = `⏳ تصفير: ${h}:${m}:${sc}`;
+                }
+            }
+
+            if (data.quicknet) {
+                const q = data.quicknet;
+                const mQnRx = document.getElementById('modern-hud-qn-rx');
+                const mQnLines = document.getElementById('modern-hud-qn-lines');
+                const mQnTotGb = document.getElementById('modern-hud-qn-total-gb');
+                const mQnSpeed = document.getElementById('modern-hud-qn-speed');
+                if (mQnRx) mQnRx.innerText = `${(q.total_rx_mbps || 0).toFixed(2)} Mbps`;
+                if (mQnLines) mQnLines.innerText = `${q.active_lines_count || 0}/5 نشطة`;
+                if (mQnTotGb) {
+                    const totGb = q.total_traffic_all_lines_gb ? q.total_traffic_all_lines_gb.toFixed(1) : '0.0';
+                    mQnTotGb.innerText = `📊 تراكمي: ${totGb} GB`;
+                }
+                if (mQnSpeed) mQnSpeed.innerText = `⬆ ${(q.total_tx_mbps || 0).toFixed(1)} Mbps`;
+            }
+
+            if (data.subscribers) {
+                const mSubs = document.getElementById('modern-hud-subs-online');
+                if (mSubs) mSubs.innerText = `${data.subscribers.total_active || 0} متصل`;
+                const mSubsTot = document.getElementById('modern-hud-subs-total');
+                if (mSubsTot && data.um_subscribers) {
+                    mSubsTot.innerText = `من أصل ${data.um_subscribers.length} مشترك`;
+                }
+            }
+
             if (document.getElementById('last-sync-time')) {
                 const now = new Date();
                 document.getElementById('last-sync-time').innerText = now.toTimeString().split(' ')[0];
@@ -2040,29 +2308,103 @@
         // ==========================================
         let currentMainTab = 'noc';
 
+        // ==========================================
+        // Modern Minimalist Design System & Mode Switcher
+        // ==========================================
+        let currentDesignMode = localStorage.getItem('mscp_design_mode') || 'modern';
+
+        function applyDesignMode(mode) {
+            currentDesignMode = mode;
+            localStorage.setItem('mscp_design_mode', mode);
+
+            const body = document.body;
+            const legacyHero = document.getElementById('legacy-hero-section');
+            const modernHud = document.getElementById('modern-hud-section');
+            const tabOps = document.getElementById('tab-btn-ops');
+            const modeIcon = document.getElementById('design-mode-icon');
+            const modeLabel = document.getElementById('design-mode-label');
+            const modeBtn = document.getElementById('design-mode-btn');
+
+            const scriptsCard = document.getElementById('ops-scripts-card');
+            const logsCard = document.getElementById('ops-logs-card');
+            const nocView = document.getElementById('view-noc');
+            const opsView = document.getElementById('view-ops');
+
+            if (mode === 'modern') {
+                body.classList.add('modern-theme');
+                if (legacyHero) legacyHero.classList.add('hidden');
+                if (modernHud) modernHud.classList.remove('hidden');
+                if (tabOps) tabOps.classList.remove('hidden');
+
+                // Move scripts and logs cards to operations tab
+                if (opsView && scriptsCard) opsView.appendChild(scriptsCard);
+                if (opsView && logsCard) opsView.appendChild(logsCard);
+
+                if (modeIcon) modeIcon.className = 'fa-solid fa-gem text-cyan-400';
+                if (modeLabel) modeLabel.innerText = 'التصميم العصري';
+                if (modeBtn) modeBtn.title = 'النمط الحالي: التصميم العصري المبسط (انقر للتبديل إلى النمط الكلاسيكي)';
+            } else {
+                body.classList.remove('modern-theme');
+                if (legacyHero) legacyHero.classList.remove('hidden');
+                if (modernHud) modernHud.classList.add('hidden');
+                if (tabOps) tabOps.classList.add('hidden');
+
+                // Move scripts and logs cards back to bottom of NOC view
+                if (nocView && scriptsCard) nocView.appendChild(scriptsCard);
+                if (nocView && logsCard) nocView.appendChild(logsCard);
+
+                // If currently on ops tab, switch back to noc view
+                if (currentMainTab === 'ops') {
+                    switchMainTab('noc');
+                }
+
+                if (modeIcon) modeIcon.className = 'fa-solid fa-desktop text-purple-400';
+                if (modeLabel) modeLabel.innerText = 'النمط الكلاسيكي';
+                if (modeBtn) modeBtn.title = 'النمط الحالي: النمط الكلاسيكي الكامل (انقر للتبديل إلى التصميم العصري)';
+            }
+        }
+
+        function toggleDesignMode() {
+            const nextMode = (currentDesignMode === 'modern' ? 'classic' : 'modern');
+            applyDesignMode(nextMode);
+            showToast(nextMode === 'modern' ? '💎 تم تفعيل التصميم العصري المبسط' : '🖥️ تم تفعيل النمط الكلاسيكي للعمليات', 'info');
+        }
+
         function switchMainTab(tab) {
             currentMainTab = tab;
             const nocBtn = document.getElementById('tab-btn-noc');
             const crmBtn = document.getElementById('tab-btn-crm');
+            const opsBtn = document.getElementById('tab-btn-ops');
             const nocView = document.getElementById('view-noc');
             const crmView = document.getElementById('view-crm');
+            const opsView = document.getElementById('view-ops');
+
+            const activeCls = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-cyan-500 text-black shadow-lg shadow-cyan-500/20';
+            const inactiveCls = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800';
+
+            if (nocView) nocView.classList.add('hidden');
+            if (crmView) crmView.classList.add('hidden');
+            if (opsView) opsView.classList.add('hidden');
+
+            if (nocBtn) nocBtn.className = inactiveCls;
+            if (crmBtn) crmBtn.className = inactiveCls;
+            if (opsBtn) opsBtn.className = inactiveCls;
 
             if (tab === 'noc') {
-                nocView.classList.remove('hidden');
-                crmView.classList.add('hidden');
-                nocBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-cyan-500 text-black shadow-lg shadow-cyan-500/20';
-                crmBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800';
-            } else {
-                nocView.classList.add('hidden');
-                crmView.classList.remove('hidden');
-                crmBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-cyan-500 text-black shadow-lg shadow-cyan-500/20';
-                nocBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white hover:bg-cyber-800';
+                if (nocView) nocView.classList.remove('hidden');
+                if (nocBtn) nocBtn.className = activeCls;
+            } else if (tab === 'crm') {
+                if (crmView) crmView.classList.remove('hidden');
+                if (crmBtn) crmBtn.className = activeCls;
 
                 if (umSubscribersCache.length === 0) {
                     fetchUmSubscribers();
                 } else {
                     renderUmSubscribers();
                 }
+            } else if (tab === 'ops') {
+                if (opsView) opsView.classList.remove('hidden');
+                if (opsBtn) opsBtn.className = activeCls;
             }
         }
 
@@ -2870,6 +3212,9 @@
 
         // Init on page load
         window.addEventListener('DOMContentLoaded', () => {
+            // Apply initial modern design mode
+            applyDesignMode(currentDesignMode);
+
             // Apply initial responsive view modes
             if (window.innerWidth < 768) {
                 setSubViewMode('cards');
