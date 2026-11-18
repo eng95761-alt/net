@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import datetime
 import json
 import logging
 import os
@@ -153,6 +154,57 @@ def translate_log_message(topic: str, msg: str) -> dict:
     }
 
 
+AVAILABLE_UM_GROUPS = [
+    {
+        "category": "🔄 باقات الهايبرد التلقائي (Hybrid Starlink + Quicknet)",
+        "groups": [
+            {"name": "Users-Profile - 2M Hybrid", "label": "2M Hybrid"},
+            {"name": "Users-Profile - 5M Hybrid", "label": "5M Hybrid"},
+            {"name": "Users-Profile - 8M Hybrid", "label": "8M Hybrid"},
+            {"name": "Users-Profile - 10M Hybrid", "label": "10M Hybrid"},
+            {"name": "Users-Profile - 15M Hybrid", "label": "15M Hybrid"},
+            {"name": "Users-Profile - 20M Hybrid", "label": "20M Hybrid"},
+            {"name": "Users-Profile - 25M Hybrid", "label": "25M Hybrid"},
+            {"name": "Users-Profile - 30M Hybrid", "label": "30M Hybrid"},
+            {"name": "Users-Profile - unlimeted Hybrid", "label": "Unlimited Hybrid"}
+        ]
+    },
+    {
+        "category": "⚡ باقات كويك نت فقط (Via Quicknet Dedicated)",
+        "groups": [
+            {"name": "Users-Profile - 2M Via Quicknet", "label": "2M Via Quicknet"},
+            {"name": "Users-Profile - 5M Via Quicknet", "label": "5M Via Quicknet"},
+            {"name": "Users-Profile - 8M Via Quicknet", "label": "8M Via Quicknet"},
+            {"name": "Users-Profile - 10M Via Quicknet", "label": "10M Via Quicknet"},
+            {"name": "Users-Profile - 15M Via Quicknet", "label": "15M Via Quicknet"},
+            {"name": "Users-Profile - 20M Via Quicknet", "label": "20M Via Quicknet"},
+            {"name": "Users-Profile - 25M Via Quicknet", "label": "25M Via Quicknet"},
+            {"name": "Users-Profile - 30M Via Quicknet", "label": "30M Via Quicknet"},
+            {"name": "unlimeted Via Quicknet", "label": "Unlimited Via Quicknet"}
+        ]
+    },
+    {
+        "category": "🛰️ باقات ستارلنك فقط (Starlink Dedicated Standard)",
+        "groups": [
+            {"name": "Users-Profile-2M", "label": "2M Starlink"},
+            {"name": "Users-Profile-5M", "label": "5M Starlink"},
+            {"name": "Users-Profile-8M", "label": "8M Starlink"},
+            {"name": "Users-Profile-10M", "label": "10M Starlink"},
+            {"name": "Users-Profile-15M", "label": "15M Starlink"},
+            {"name": "Users-Profile-20M", "label": "20M Starlink"},
+            {"name": "Users-Profile-25M", "label": "25M Starlink"},
+            {"name": "Users-Profile-30M", "label": "30M Starlink"},
+            {"name": "unlimeted", "label": "Unlimited Starlink"}
+        ]
+    }
+]
+
+AVAILABLE_UM_PROFILES = [
+    {"name": "30 Day", "label": "اشتراك 30 يوم (4 أسابيع ويومين)", "validity": "4w2d"},
+    {"name": "Open-Profile-Unlimtied", "label": "اشتراك مفتوح غير محدد (Unlimited)", "validity": "unlimited"}
+]
+
+
 telemetry_data: Dict[str, Any] = {
     "status": "connecting",
     "timestamp": time.time(),
@@ -210,13 +262,16 @@ telemetry_data: Dict[str, Any] = {
     "quicknet": {
         "total_rx_mbps": 0.0,
         "total_tx_mbps": 0.0,
+        "total_traffic_all_lines_gb": 0.0,
+        "total_rx_all_lines_gb": 0.0,
+        "total_tx_all_lines_gb": 0.0,
         "active_lines_count": 3,
         "lines": [
-            {"id": 1, "name": "Line 1 (pppoe-out1)", "interface": "pppoe-out1", "user": "ali.nael", "rx_mbps": 0.0, "tx_mbps": 0.0, "pct": 33.3, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
-            {"id": 2, "name": "Line 2 (pppoe-out2)", "interface": "pppoe-out2", "user": "k@1234", "rx_mbps": 0.0, "tx_mbps": 0.0, "pct": 33.3, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
-            {"id": 3, "name": "Line 3 (pppoe-out3)", "interface": "pppoe-out3", "user": "m@232", "rx_mbps": 0.0, "tx_mbps": 0.0, "pct": 33.4, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
-            {"id": 4, "name": "Line 4 (pppoe-out4)", "interface": "pppoe-out4", "user": "user4", "rx_mbps": 0.0, "tx_mbps": 0.0, "pct": 0.0, "status": "disabled", "uptime": "--", "local_ip": "--", "expiry": "غير مفعل"},
-            {"id": 5, "name": "Line 5 (pppoe-out5)", "interface": "pppoe-out5", "user": "user5", "rx_mbps": 0.0, "tx_mbps": 0.0, "pct": 0.0, "status": "disabled", "uptime": "--", "local_ip": "--", "expiry": "غير مفعل"}
+            {"id": 1, "name": "Line 1 (pppoe-out1)", "interface": "pppoe-out1", "user": "ali.nael", "rx_mbps": 0.0, "tx_mbps": 0.0, "rx_total_gb": 0.0, "tx_total_gb": 0.0, "total_data_gb": 0.0, "pct": 33.3, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
+            {"id": 2, "name": "Line 2 (pppoe-out2)", "interface": "pppoe-out2", "user": "k@1234", "rx_mbps": 0.0, "tx_mbps": 0.0, "rx_total_gb": 0.0, "tx_total_gb": 0.0, "total_data_gb": 0.0, "pct": 33.3, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
+            {"id": 3, "name": "Line 3 (pppoe-out3)", "interface": "pppoe-out3", "user": "m@232", "rx_mbps": 0.0, "tx_mbps": 0.0, "rx_total_gb": 0.0, "tx_total_gb": 0.0, "total_data_gb": 0.0, "pct": 33.4, "status": "running", "uptime": "--", "local_ip": "--", "expiry": "تجديد شهري"},
+            {"id": 4, "name": "Line 4 (pppoe-out4)", "interface": "pppoe-out4", "user": "user4", "rx_mbps": 0.0, "tx_mbps": 0.0, "rx_total_gb": 0.0, "tx_total_gb": 0.0, "total_data_gb": 0.0, "pct": 0.0, "status": "disabled", "uptime": "--", "local_ip": "--", "expiry": "غير مفعل"},
+            {"id": 5, "name": "Line 5 (pppoe-out5)", "interface": "pppoe-out5", "user": "user5", "rx_mbps": 0.0, "tx_mbps": 0.0, "rx_total_gb": 0.0, "tx_total_gb": 0.0, "total_data_gb": 0.0, "pct": 0.0, "status": "disabled", "uptime": "--", "local_ip": "--", "expiry": "غير مفعل"}
         ]
     },
     "subscribers": {
@@ -228,6 +283,9 @@ telemetry_data: Dict[str, Any] = {
         "list": []
     },
     "automation_scripts": [],
+    "um_subscribers": [],
+    "available_groups": AVAILABLE_UM_GROUPS,
+    "available_profiles": AVAILABLE_UM_PROFILES,
     "system_logs": [],
     "history": history_buffer,
     "events": []
@@ -267,6 +325,8 @@ class RouterMonitorWorker:
         self.cached_baseline_rx = None
         self.cached_scripts = []
         self.last_scripts_fetch = 0
+        self.cached_um_subscribers = []
+        self.last_um_fetch = 0
 
     def fetch_scripts(self):
         if not self.ssh or (self.ssh.get_transport() and not self.ssh.get_transport().is_active()):
@@ -361,6 +421,137 @@ class RouterMonitorWorker:
         except Exception as e:
             logger.error(f"Failed to fetch scripts: {e}")
 
+    def fetch_usermanager_subscribers(self):
+        if not self.ssh or (self.ssh.get_transport() and not self.ssh.get_transport().is_active()):
+            return
+        try:
+            cmd = (
+                "/user-manager/user print detail; "
+                ':put "===UM_PROFILES==="; '
+                "/user-manager/user-profile print detail; "
+            )
+            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=6)
+            out = stdout.read().decode("utf-8", errors="ignore")
+            
+            parts = out.split("===UM_PROFILES===")
+            users_chunk = parts[0]
+            profiles_chunk = parts[1] if len(parts) > 1 else ""
+
+            # 1. Parse Profiles by user
+            user_profiles = {}
+            p_entries = re.split(r'\n\s*[0-9]+\s+', '\n' + profiles_chunk)
+            for pe in p_entries:
+                pe = pe.strip()
+                if not pe:
+                    continue
+                u_m = re.search(r'user="?([^"\s]+)"?', pe)
+                prof_m = re.search(r'profile="?([^"\s]+(?:\s+[^"\s]+)*)"?\s+state=', pe)
+                state_m = re.search(r'state=([^\s]+)', pe)
+                end_m = re.search(r'end-time=([0-9\-]+ [0-9:]+|unlimited)', pe)
+                if u_m:
+                    uname = u_m.group(1)
+                    prof_name = ""
+                    if "profile=30 Day" in pe or 'profile="30 Day"' in pe:
+                        prof_name = "30 Day"
+                    elif "Open-Profile-Unlimtied" in pe:
+                        prof_name = "Open-Profile-Unlimtied"
+                    elif prof_m:
+                        prof_name = prof_m.group(1)
+                    
+                    user_profiles[uname] = {
+                        "profile": prof_name,
+                        "state": state_m.group(1) if state_m else "unknown",
+                        "end_time": end_m.group(1) if end_m else "unlimited"
+                    }
+
+            # 2. Match with active subscribers for live connection status
+            active_sessions_map = {}
+            if "subscribers" in telemetry_data and "list" in telemetry_data["subscribers"]:
+                for s in telemetry_data["subscribers"]["list"]:
+                    active_sessions_map[s["name"]] = s
+
+            # 3. Parse Users
+            parsed_users = []
+            u_entries = re.split(r'\n\s*[0-9]+\s+', '\n' + users_chunk)
+            now_time = datetime.now()
+
+            for ue in u_entries:
+                ue = ue.strip()
+                if not ue or "name=" not in ue:
+                    continue
+                
+                is_disabled = bool(re.search(r'^\s*X\b', ue) or 'disabled=yes' in ue)
+                comm_m = re.search(r';;;\s*([^\r\n]+)', ue)
+                name_m = re.search(r'name="?([^"\s]+)"?', ue)
+                group_m = re.search(r'group="?([^"\r\n]+?)"?(?:\s+[a-zA-Z0-9\-]+=|$)', ue)
+
+                if not name_m:
+                    continue
+                uname = name_m.group(1)
+                comment = comm_m.group(1).strip() if comm_m else ""
+                raw_group = group_m.group(1).strip() if group_m else "default"
+                
+                # Profile details
+                p_info = user_profiles.get(uname, {"profile": "غير محدد", "state": "none", "end_time": "--"})
+                end_time_str = p_info["end_time"]
+                state_str = p_info["state"]
+                
+                days_left = None
+                expiry_badge = "unlimited"
+                
+                if end_time_str != "unlimited" and end_time_str != "--":
+                    try:
+                        dt = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S")
+                        diff = (dt - now_time).total_seconds()
+                        days_left = round(diff / 86400, 1)
+                        if state_str == "used" or diff <= 0:
+                            expiry_badge = "expired"
+                        elif diff <= 259200: # 3 days
+                            expiry_badge = "expiring_soon"
+                        else:
+                            expiry_badge = "active"
+                    except Exception:
+                        pass
+                elif end_time_str == "unlimited":
+                    expiry_badge = "unlimited"
+
+                # Check online session
+                active_s = active_sessions_map.get(uname)
+                is_online = active_s is not None
+                live_ip = active_s["ip"] if active_s else "--"
+                live_uptime = active_s["uptime"] if active_s else "--"
+                live_rate_str = active_s.get("rate_str", "--") if active_s else "--"
+                live_download_mbps = active_s.get("download_mbps", 0.0) if active_s else 0.0
+                live_upload_mbps = active_s.get("upload_mbps", 0.0) if active_s else 0.0
+
+                # Classify service type
+                srv_type = "Hybrid" if "Hybrid" in raw_group else ("Quicknet" if "Quicknet" in raw_group else "Starlink")
+                
+                parsed_users.append({
+                    "username": uname,
+                    "comment": comment,
+                    "disabled": is_disabled,
+                    "group": raw_group,
+                    "service_type": srv_type,
+                    "profile": p_info["profile"],
+                    "state": state_str,
+                    "end_time": end_time_str,
+                    "days_left": days_left,
+                    "expiry_badge": expiry_badge,
+                    "is_online": is_online,
+                    "live_ip": live_ip,
+                    "live_uptime": live_uptime,
+                    "live_rate_str": live_rate_str,
+                    "live_download_mbps": live_download_mbps,
+                    "live_upload_mbps": live_upload_mbps
+                })
+
+            self.cached_um_subscribers = parsed_users
+            self.last_um_fetch = time.time()
+            telemetry_data["um_subscribers"] = parsed_users
+        except Exception as e:
+            logger.error(f"Failed to fetch user-manager subscribers: {e}")
+
     def connect(self):
         try:
             if self.ssh:
@@ -423,22 +614,24 @@ class RouterMonitorWorker:
             # High-performance batch command with clean delimiters
             cmd = (
                 "/interface monitor-traffic ether1-ISP,pppoe-out1,pppoe-out2,pppoe-out3,pppoe-out4,pppoe-out5 once; "
-                ":put \"===SUB_TRAFFIC===\"; "
+                ':put "===QN_BYTES==="; '
+                ':foreach i in={"pppoe-out1";"pppoe-out2";"pppoe-out3";"pppoe-out4";"pppoe-out5"} do={ :local itm [/interface find name=$i]; :if ([:len $itm] > 0) do={ :put ($i . ":" . [/interface get $itm rx-byte] . ":" . [/interface get $itm tx-byte]) } else={ :put ($i . ":0:0") } }; '
+                ':put "===SUB_TRAFFIC==="; '
                 "/interface monitor-traffic [find type=\"pppoe-in\"] once; "
-                ":put \"===STARLINK_VARS===\"; "
-                ":global StarlinkMidnightRX; :put (\"MIDNIGHT_RX: \" . $StarlinkMidnightRX); "
-                ":global StarlinkQuotaExceeded; :put (\"QUOTA_EXCEEDED: \" . $StarlinkQuotaExceeded); "
-                ":put (\"CURRENT_RX: \" . [/interface get [find name=\"ether1-ISP\"] rx-byte]); "
-                ":put \"===HYBRID_USERS===\"; "
-                ":foreach u in=[/user-manager/user find group~\"Hybrid\"] do={ :put (\"HYB_USER:\" . [/user-manager/user get $u name]) }; "
-                ":put \"===PPPOE_CLIENT_MON===\"; "
+                ':put "===STARLINK_VARS==="; '
+                ':global StarlinkMidnightRX; :put ("MIDNIGHT_RX: " . $StarlinkMidnightRX); '
+                ':global StarlinkQuotaExceeded; :put ("QUOTA_EXCEEDED: " . $StarlinkQuotaExceeded); '
+                ':put ("CURRENT_RX: " . [/interface get [find name="ether1-ISP"] rx-byte]); '
+                ':put "===HYBRID_USERS==="; '
+                ':foreach u in=[/user-manager/user find group~"Hybrid"] do={ :put ("HYB_USER:" . [/user-manager/user get $u name]) }; '
+                ':put "===PPPOE_CLIENT_MON==="; '
                 "/interface/pppoe-client monitor pppoe-out1,pppoe-out2,pppoe-out3,pppoe-out4,pppoe-out5 once; "
-                ":put \"===RESOURCE===\"; "
+                ':put "===RESOURCE==="; '
                 "/system resource print; "
                 "/system health print; "
-                ":put \"===ACTIVE_PPP===\"; "
+                ':put "===ACTIVE_PPP==="; '
                 "/ppp active print detail; "
-                ":put \"===LOG_START===\"; :local logs [/log find]; :local total [:len $logs]; :local s 0; :if ($total > 15) do={ :set s ($total - 15) }; :for i from=$s to=($total - 1) do={ :local id ($logs->$i); :put (([/log get $id time]) . \" # \" . ([/log get $id topics]) . \" # \" . ([/log get $id message])) }; :put \"===LOG_END===\";"
+                ':put "===LOG_START==="; :local logs [/log find]; :local total [:len $logs]; :local s 0; :if ($total > 15) do={ :set s ($total - 15) }; :for i from=$s to=($total - 1) do={ :local id ($logs->$i); :put (([/log get $id time]) . " # " . ([/log get $id topics]) . " # " . ([/log get $id message])) }; :put "===LOG_END===";'
             )
             stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=8)
             raw_out = stdout.read().decode("utf-8", errors="ignore")
@@ -448,8 +641,7 @@ class RouterMonitorWorker:
             telemetry_data["timestamp"] = current_ts
 
             # 1. Parse Traffic Monitor for WANs (Starlink + Quicknet 5 lines)
-            wan_mon = raw_out.split("MIDNIGHT_RX:")[0] if "MIDNIGHT_RX:" in raw_out else raw_out
-            # First block of monitor-traffic is for ether1-ISP + pppoe-out1..5
+            wan_mon = raw_out.split("===QN_BYTES===")[0] if "===QN_BYTES===" in raw_out else raw_out
             first_block = wan_mon.split("/interface monitor-traffic")[0] if "/interface monitor-traffic" in wan_mon else wan_mon
             rx_rates = {}
             tx_rates = {}
@@ -473,7 +665,24 @@ class RouterMonitorWorker:
             telemetry_data["starlink"]["current_rx_mbps"] = round(star_rx, 2)
             telemetry_data["starlink"]["current_tx_mbps"] = round(star_tx, 2)
 
-            # 2. Parse Quicknet PPPoE Client Monitor (Uptime, Local IP, Status for all 5 lines)
+            # 2. Parse Quicknet Cumulative Hardware Byte Counters (Total Data Transferred)
+            qn_bytes_map = {}
+            if "===QN_BYTES===" in raw_out and "===SUB_TRAFFIC===" in raw_out:
+                qn_b_chunk = raw_out.split("===QN_BYTES===")[1].split("===SUB_TRAFFIC===")[0]
+                for qb_line in qn_b_chunk.strip().split("\n"):
+                    qb_line = qb_line.strip()
+                    if ":" in qb_line:
+                        parts = qb_line.split(":")
+                        if len(parts) >= 3:
+                            if_name = parts[0].strip()
+                            try:
+                                rx_b = int(parts[1].strip())
+                                tx_b = int(parts[2].strip())
+                                qn_bytes_map[if_name] = {"rx_bytes": rx_b, "tx_bytes": tx_b}
+                            except ValueError:
+                                pass
+
+            # 3. Parse Quicknet PPPoE Client Monitor (Uptime, Local IP, Status for all 5 lines)
             pppoe_mon_section = ""
             if "===PPPOE_CLIENT_MON===" in raw_out and "===RESOURCE===" in raw_out:
                 pppoe_mon_section = raw_out.split("===PPPOE_CLIENT_MON===")[1].split("===RESOURCE===")[0]
@@ -510,6 +719,12 @@ class RouterMonitorWorker:
                     up = "--"
                     ip = "--"
 
+                # Cumulative data transferred calculations
+                b_info = qn_bytes_map.get(line_name, {"rx_bytes": 0, "tx_bytes": 0})
+                rx_gb = round(b_info["rx_bytes"] / 1000000000.0, 2)
+                tx_gb = round(b_info["tx_bytes"] / 1000000000.0, 2)
+                tot_gb = round(rx_gb + tx_gb, 2)
+
                 quicknet_lines.append({
                     "id": idx + 1,
                     "name": f"Line {idx+1} ({line_name})",
@@ -517,6 +732,11 @@ class RouterMonitorWorker:
                     "user": known_users[idx],
                     "rx_mbps": round(r_rate, 2),
                     "tx_mbps": round(t_rate, 2),
+                    "rx_total_gb": rx_gb,
+                    "tx_total_gb": tx_gb,
+                    "total_data_gb": tot_gb,
+                    "raw_rx_bytes": b_info["rx_bytes"],
+                    "raw_tx_bytes": b_info["tx_bytes"],
                     "pct": 0.0,
                     "status": st,
                     "uptime": up,
@@ -533,8 +753,15 @@ class RouterMonitorWorker:
                 else:
                     ql["pct"] = 0.0
 
+            sum_qn_rx_gb = round(sum(l["rx_total_gb"] for l in quicknet_lines), 2)
+            sum_qn_tx_gb = round(sum(l["tx_total_gb"] for l in quicknet_lines), 2)
+            sum_qn_total_gb = round(sum_qn_rx_gb + sum_qn_tx_gb, 2)
+
             telemetry_data["quicknet"]["total_rx_mbps"] = round(total_q_rx, 2)
             telemetry_data["quicknet"]["total_tx_mbps"] = round(total_q_tx, 2)
+            telemetry_data["quicknet"]["total_traffic_all_lines_gb"] = sum_qn_total_gb
+            telemetry_data["quicknet"]["total_rx_all_lines_gb"] = sum_qn_rx_gb
+            telemetry_data["quicknet"]["total_tx_all_lines_gb"] = sum_qn_tx_gb
             telemetry_data["quicknet"]["active_lines_count"] = active_lines_count
             telemetry_data["quicknet"]["lines"] = quicknet_lines
 
@@ -888,6 +1115,10 @@ class RouterMonitorWorker:
             if time.time() - self.last_scripts_fetch > 30 or not self.cached_scripts:
                 self.fetch_scripts()
 
+            # 11. Fetch / Refresh User Manager Subscribers every 15 seconds
+            if time.time() - self.last_um_fetch > 15 or not self.cached_um_subscribers:
+                self.fetch_usermanager_subscribers()
+
         except Exception as e:
             logger.error(f"Error in polling iteration: {e}")
             telemetry_data["status"] = "error"
@@ -1006,6 +1237,128 @@ async def kick_subscriber(payload: Dict[str, str]):
         except Exception as e:
             return {"success": False, "message": str(e)}
     return {"success": False, "message": "Router connection offline"}
+
+
+# User Manager Management Endpoints
+@app.get("/api/usermanager/subscribers")
+async def get_um_subscribers():
+    if not worker.cached_um_subscribers and worker.ssh:
+        worker.fetch_usermanager_subscribers()
+    return {
+        "subscribers": worker.cached_um_subscribers,
+        "groups": AVAILABLE_UM_GROUPS,
+        "profiles": AVAILABLE_UM_PROFILES,
+        "last_updated": worker.last_um_fetch
+    }
+
+
+@app.get("/api/usermanager/groups")
+async def get_um_groups():
+    return {
+        "groups": AVAILABLE_UM_GROUPS,
+        "profiles": AVAILABLE_UM_PROFILES
+    }
+
+
+@app.post("/api/usermanager/renew")
+async def renew_um_subscriber(payload: Dict[str, Any]):
+    user = payload.get("username", "").strip()
+    profile = payload.get("profile", "30 Day").strip()
+    if not user:
+        return {"success": False, "message": "اسم المشترك مطلوب"}
+    if not worker.ssh:
+        return {"success": False, "message": "الاتصال بالمايكروتك غير متاح حالياً"}
+    
+    try:
+        # User Manager v5 syntax: add profile assignment and enable user
+        cmd = f'/user-manager/user-profile add user="{user}" profile="{profile}"; /user-manager/user enable [find name="{user}"];'
+        stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
+        err = stderr.read().decode("utf-8", errors="ignore").strip()
+        if err:
+            logger.error(f"Error renewing user {user}: {err}")
+            return {"success": False, "message": f"فشل التجديد: {err}"}
+        
+        worker.add_event(f"⚡ تم تجديد اشتراك المشترك: {user} بنجاح (بروفايل: {profile})", "renew")
+        worker.fetch_usermanager_subscribers()
+        return {"success": True, "message": f"تم تجديد اشتراك المشترك {user} بنجاح ({profile})"}
+    except Exception as e:
+        logger.error(f"Exception renewing user {user}: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@app.post("/api/usermanager/change-group")
+async def change_um_subscriber_group(payload: Dict[str, Any]):
+    user = payload.get("username", "").strip()
+    group = payload.get("group", "").strip()
+    profile = payload.get("profile", "").strip()
+    kick = payload.get("kick", True)
+    
+    if not user:
+        return {"success": False, "message": "اسم المشترك مطلوب"}
+    if not group and not profile:
+        return {"success": False, "message": "يجب تحديد الباقة أو البروفايل الجديد"}
+    if not worker.ssh:
+        return {"success": False, "message": "الاتصال بالمايكروتك غير متاح حالياً"}
+    
+    try:
+        cmd_parts = []
+        msg_parts = []
+        
+        if group:
+            cmd_parts.append(f'/user-manager/user set [find name="{user}"] group="{group}"')
+            msg_parts.append(f"باقة '{group}'")
+        
+        if profile:
+            cmd_parts.append(f'/user-manager/user-profile add user="{user}" profile="{profile}"')
+            msg_parts.append(f"بروفايل '{profile}'")
+            
+        if kick:
+            cmd_parts.append(f'/ppp active remove [find name="{user}"]')
+            
+        full_cmd = "; ".join(cmd_parts) + ";"
+        stdin, stdout, stderr = worker.ssh.exec_command(full_cmd, timeout=8)
+        err = stderr.read().decode("utf-8", errors="ignore").strip()
+        if err:
+            logger.error(f"Error updating user {user}: {err}")
+            return {"success": False, "message": f"فشل تحديث المشترك: {err}"}
+        
+        details = " و ".join(msg_parts)
+        kick_note = " وتم فصل الجلسة لتطبيق السرعة فوراً" if kick else ""
+        worker.add_event(f"🔄 تم تحديث مشترك {user}: {details}{kick_note}", "change_group")
+        worker.fetch_usermanager_subscribers()
+        return {"success": True, "message": f"تم تحديث بيانات المشترك {user} إلى {details} بنجاح{kick_note}"}
+    except Exception as e:
+        logger.error(f"Exception updating user {user}: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@app.post("/api/usermanager/toggle-status")
+async def toggle_um_subscriber_status(payload: Dict[str, Any]):
+    user = payload.get("username", "").strip()
+    enable = payload.get("enable", True)
+    if not user:
+        return {"success": False, "message": "اسم المشترك مطلوب"}
+    if not worker.ssh:
+        return {"success": False, "message": "الاتصال بالمايكروتك غير متاح حالياً"}
+    
+    try:
+        if enable:
+            cmd = f'/user-manager/user enable [find name="{user}"];'
+            action_desc = "تفعيل"
+        else:
+            cmd = f'/user-manager/user disable [find name="{user}"]; /ppp active remove [find name="{user}"];'
+            action_desc = "تعطيل وفصل"
+        
+        stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
+        err = stderr.read().decode("utf-8", errors="ignore").strip()
+        if err:
+            return {"success": False, "message": f"فشل {action_desc} الحساب: {err}"}
+        
+        worker.add_event(f"⚙️ تم {action_desc} حساب المشترك: {user}", "toggle_status")
+        worker.fetch_usermanager_subscribers()
+        return {"success": True, "message": f"تم {action_desc} حساب المشترك {user} بنجاح"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
 
 
 # Static Files Delivery

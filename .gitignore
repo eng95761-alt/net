@@ -12,8 +12,11 @@ ENV/
 
 # Backups and confidential exports
 backups/
+raw_audit/
 *.backup
 *.rsc
+*.txt
+fix_script_syntax.py
 
 # OS metadata
 .DS_Store
