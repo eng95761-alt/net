@@ -32,17 +32,17 @@
                     },
                     colors: {
                         cyber: {
-                            900: '#07090e',
-                            800: '#0d121d',
-                            700: '#141c2e',
-                            600: '#1e293b',
-                            border: '#1f2a40',
-                            accent: '#00f2fe',
-                            accent2: '#4facfe',
-                            starlink: '#a855f7',
-                            quicknet: '#10b981',
-                            hybrid: '#f59e0b',
-                            danger: '#ef4444',
+                            900: '#0b1120', // Eye-friendly deep slate navy (was #07090e)
+                            800: '#162032', // Soothing slate-card surface (was #0d121d)
+                            700: '#1e293b', // Elevated slate container (was #141c2e)
+                            600: '#334155', // Subtle slate border / highlight (was #1e293b)
+                            border: '#253347', // Soft eye-friendly border
+                            accent: '#38bdf8', // Soft sky cyan (was #00f2fe)
+                            accent2: '#60a5fa', // Soft sky blue (was #4facfe)
+                            starlink: '#c084fc', // Soft purple lilac (was #a855f7)
+                            quicknet: '#34d399', // Soft mint emerald (was #10b981)
+                            hybrid: '#fbbf24', // Soft amber gold (was #f59e0b)
+                            danger: '#f87171', // Soft rose red (was #ef4444)
                         }
                     }
                 }
@@ -52,41 +52,48 @@
 
     <style>
         body {
-            background-color: #07090e;
-            color: #f1f5f9;
+            background-color: #0b1120;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.45) 0px, transparent 55%),
+                radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.6) 0px, transparent 55%),
+                radial-gradient(at 50% 100%, rgba(15, 23, 42, 0.7) 0px, transparent 60%);
+            background-attachment: fixed;
+            color: #e2e8f0;
             font-family: 'Cairo', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }
         ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0d121d;
+            background: #0b1120;
         }
         ::-webkit-scrollbar-thumb {
-            background: #25334d;
+            background: #253347;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6;
+            background: #38bdf8;
         }
         .glass-panel {
-            background: rgba(13, 18, 29, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(148, 163, 184, 0.12);
         }
         .glass-card {
-            background: rgba(20, 28, 46, 0.65);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(22, 32, 50, 0.7);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
             transition: all 0.25s ease-in-out;
         }
         .glass-card:hover {
-            border-color: rgba(0, 242, 254, 0.3);
-            box-shadow: 0 10px 25px -10px rgba(0, 242, 254, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.35);
         }
         .glow-text-cyan {
             text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
@@ -120,26 +127,27 @@
             to { transform: translateY(0); opacity: 1; }
         }
     
-        /* Modern Minimalist Cyber Theme */
+        /* Modern Minimalist & Eye-Friendly Slate Theme */
         .modern-theme {
-            background-color: #07090e;
+            background-color: #0b1120;
+            color: #e2e8f0;
         }
         .modern-theme .glass-panel {
-            background: rgba(10, 14, 23, 0.85) !important;
+            background: rgba(15, 23, 42, 0.9) !important;
             backdrop-filter: blur(18px) !important;
             -webkit-backdrop-filter: blur(18px) !important;
-            border-color: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(148, 163, 184, 0.14) !important;
         }
         .modern-theme .glass-card {
-            background: rgba(14, 19, 32, 0.72) !important;
+            background: rgba(22, 32, 50, 0.72) !important;
             backdrop-filter: blur(14px) !important;
             -webkit-backdrop-filter: blur(14px) !important;
-            border-color: rgba(255, 255, 255, 0.06) !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35) !important;
+            border-color: rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
         }
         .modern-theme .glass-card:hover {
-            border-color: rgba(0, 243, 255, 0.22) !important;
-            box-shadow: 0 12px 30px -10px rgba(0, 243, 255, 0.12) !important;
+            border-color: rgba(56, 189, 248, 0.3) !important;
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.35) !important;
         }
         .modern-theme .glow-text-cyan,
         .modern-theme .glow-text-starlink,
@@ -147,18 +155,19 @@
             text-shadow: none !important;
         }
         .hud-kpi-card {
-            background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(13, 18, 30, 0.75) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: linear-gradient(135deg, rgba(26, 38, 59, 0.9) 0%, rgba(18, 27, 43, 0.85) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.16);
             border-radius: 1rem;
             padding: 1rem;
             position: relative;
             overflow: hidden;
             transition: all 0.25s ease;
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2);
         }
         .hud-kpi-card:hover {
-            border-color: rgba(0, 243, 255, 0.3);
+            border-color: rgba(56, 189, 248, 0.35);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -10px rgba(0, 243, 255, 0.15);
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.35);
         }
 </style>
 </head>
@@ -1427,8 +1436,8 @@
             const ctx = document.getElementById('liveBandwidthChart').getContext('2d');
             
             const combinedGrad = ctx.createLinearGradient(0, 0, 0, 240);
-            combinedGrad.addColorStop(0, 'rgba(0, 242, 254, 0.35)');
-            combinedGrad.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+            combinedGrad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
+            combinedGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
 
             bandwidthChart = new Chart(ctx, {
                 type: 'line',
@@ -1438,7 +1447,7 @@
                         {
                             label: 'إجمالي الشبكة (Combined Mbps)',
                             data: [],
-                            borderColor: '#00f2fe',
+                            borderColor: '#38bdf8',
                             backgroundColor: combinedGrad,
                             borderWidth: 2.5,
                             tension: 0.35,
@@ -1448,7 +1457,7 @@
                         {
                             label: 'سحب ستارلنك (Starlink Mbps)',
                             data: [],
-                            borderColor: '#a855f7',
+                            borderColor: '#c084fc',
                             borderWidth: 1.8,
                             tension: 0.35,
                             fill: false,
@@ -1457,7 +1466,7 @@
                         {
                             label: 'سحب كويك نت (Quicknet Mbps)',
                             data: [],
-                            borderColor: '#10b981',
+                            borderColor: '#34d399',
                             borderWidth: 1.8,
                             tension: 0.35,
                             fill: false,
@@ -1475,14 +1484,14 @@
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+                            grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            grid: { color: 'rgba(148, 163, 184, 0.08)' },
                             ticks: {
-                                color: '#64748b',
+                                color: '#94a3b8',
                                 font: { family: 'JetBrains Mono', size: 10 },
                                 callback: val => val + ' M'
                             }
@@ -3235,7 +3244,7 @@
         });
     </script>
     <!-- Passcode Authentication Lock Screen Overlay -->
-    <div id="auth-lock-overlay" class="fixed inset-0 z-[9999] bg-[#07090e]/95 backdrop-blur-2xl flex items-center justify-center p-4">
+    <div id="auth-lock-overlay" class="fixed inset-0 z-[9999] bg-[#0b1120]/95 backdrop-blur-2xl flex items-center justify-center p-4">
         <div id="auth-card-box" class="glass-panel max-w-sm w-full rounded-3xl p-6 sm:p-8 space-y-6 border border-cyan-500/30 text-center shadow-2xl shadow-cyan-950/50 relative overflow-hidden transition-all duration-300">
             <!-- Ambient Glow -->
             <div class="absolute -right-20 -top-20 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
