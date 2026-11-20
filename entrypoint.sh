@@ -13,7 +13,7 @@ PrivateKey = ${WG_PRIVATE_KEY}
 PublicKey = ${WG_PEER_PUBLIC_KEY}
 Endpoint = ${WG_ENDPOINT}
 AllowedIPs = ${WG_ALLOWED_IPS:-192.168.216.0/24}
-PersistentKeepalive = 15
+PersistentKeepalive = 25
 
 [Socks5]
 BindAddress = 127.0.0.1:1085

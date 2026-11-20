@@ -1,3 +1,4 @@
+import threading
 import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -338,14 +339,17 @@ class RouterMonitorWorker:
         self.last_scripts_fetch = 0
         self.cached_um_subscribers = []
         self.last_um_fetch = 0
+        self.cmd_lock = threading.Lock()
+        self.last_connect_attempt = 0
 
     def fetch_scripts(self):
         if not self.ssh or (self.ssh.get_transport() and not self.ssh.get_transport().is_active()):
             return
         try:
             cmd = '/system script print terse; :put "===SCHEDULERS==="; /system scheduler print terse'
-            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=5)
-            out = stdout.read().decode("utf-8", errors="ignore")
+            with self.cmd_lock:
+                stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=5)
+                out = stdout.read().decode("utf-8", errors="ignore")
             parts = out.split("===SCHEDULERS===")
             scripts_raw = parts[0]
             sched_raw = parts[1] if len(parts) > 1 else ""
@@ -441,8 +445,9 @@ class RouterMonitorWorker:
                 ':put "===UM_PROFILES==="; '
                 "/user-manager/user-profile print detail; "
             )
-            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=6)
-            out = stdout.read().decode("utf-8", errors="ignore")
+            with self.cmd_lock:
+                stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=6)
+                out = stdout.read().decode("utf-8", errors="ignore")
             
             parts = out.split("===UM_PROFILES===")
             users_chunk = parts[0]
@@ -564,6 +569,10 @@ class RouterMonitorWorker:
             logger.error(f"Failed to fetch user-manager subscribers: {e}")
 
     def connect(self):
+        now = time.time()
+        if now - getattr(self, 'last_connect_attempt', 0) < 6:
+            return False
+        self.last_connect_attempt = now
         try:
             if self.ssh:
                 try:
@@ -644,8 +653,9 @@ class RouterMonitorWorker:
                 "/ppp active print detail; "
                 ':put "===LOG_START==="; :local logs [/log find]; :local total [:len $logs]; :local s 0; :if ($total > 15) do={ :set s ($total - 15) }; :for i from=$s to=($total - 1) do={ :local id ($logs->$i); :put (([/log get $id time]) . " # " . ([/log get $id topics]) . " # " . ([/log get $id message])) }; :put "===LOG_END===";'
             )
-            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=8)
-            raw_out = stdout.read().decode("utf-8", errors="ignore")
+            with self.cmd_lock:
+                stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=8)
+                raw_out = stdout.read().decode("utf-8", errors="ignore")
 
             telemetry_data["status"] = "online"
             current_ts = time.time()
@@ -1122,12 +1132,12 @@ class RouterMonitorWorker:
 
             telemetry_data["system_logs"] = parsed_logs
 
-            # 10. Fetch / Refresh Automation Scripts & Schedulers every 30 seconds
-            if time.time() - self.last_scripts_fetch > 30 or not self.cached_scripts:
+            # 10. Fetch / Refresh Automation Scripts & Schedulers every 60 seconds
+            if time.time() - self.last_scripts_fetch > 60 or not self.cached_scripts:
                 self.fetch_scripts()
 
-            # 11. Fetch / Refresh User Manager Subscribers every 15 seconds
-            if time.time() - self.last_um_fetch > 15 or not self.cached_um_subscribers:
+            # 11. Fetch / Refresh User Manager Subscribers every 45 seconds
+            if time.time() - self.last_um_fetch > 45 or not self.cached_um_subscribers:
                 self.fetch_usermanager_subscribers()
 
         except Exception as e:
@@ -1168,7 +1178,7 @@ async def background_telemetry_loop():
                         active_websockets.remove(ds)
         except Exception as e:
             logger.error(f"Background loop error: {e}")
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(3.5)
 
 
 @asynccontextmanager
@@ -1267,7 +1277,8 @@ async def kick_subscriber(payload: Dict[str, Any]):
     if worker.ssh:
         try:
             cmd = f'/ppp active remove [find name="{user}"]'
-            stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=5)
+            with worker.cmd_lock:
+                stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=5)
             worker.add_event(f"⚡ تم فصل جلسة المشترك يدويًا: {user}", "kick")
             return {"success": True, "message": f"Successfully kicked {user}"}
         except Exception as e:
@@ -1311,8 +1322,9 @@ async def renew_um_subscriber(payload: Dict[str, Any]):
     try:
         # User Manager v5 syntax: add profile assignment and enable user
         cmd = f'/user-manager/user-profile add user="{user}" profile="{profile}"; /user-manager/user enable [find name="{user}"];'
-        stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
-        err = stderr.read().decode("utf-8", errors="ignore").strip()
+        with worker.cmd_lock:
+            stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
+            err = stderr.read().decode("utf-8", errors="ignore").strip()
         if err:
             logger.error(f"Error renewing user {user}: {err}")
             return {"success": False, "message": f"فشل التجديد: {err}"}
@@ -1358,7 +1370,8 @@ async def change_um_subscriber_group(payload: Dict[str, Any]):
             cmd_parts.append(f'/ppp active remove [find name="{user}"]')
             
         full_cmd = "; ".join(cmd_parts) + ";"
-        stdin, stdout, stderr = worker.ssh.exec_command(full_cmd, timeout=8)
+        with worker.cmd_lock:
+            stdin, stdout, stderr = worker.ssh.exec_command(full_cmd, timeout=8)
         err = stderr.read().decode("utf-8", errors="ignore").strip()
         if err:
             logger.error(f"Error updating user {user}: {err}")
@@ -1394,8 +1407,9 @@ async def toggle_um_subscriber_status(payload: Dict[str, Any]):
             cmd = f'/user-manager/user disable [find name="{user}"]; /ppp active remove [find name="{user}"];'
             action_desc = "تعطيل وفصل"
         
-        stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
-        err = stderr.read().decode("utf-8", errors="ignore").strip()
+        with worker.cmd_lock:
+            stdin, stdout, stderr = worker.ssh.exec_command(cmd, timeout=8)
+            err = stderr.read().decode("utf-8", errors="ignore").strip()
         if err:
             return {"success": False, "message": f"فشل {action_desc} الحساب: {err}"}
         

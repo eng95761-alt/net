@@ -1823,7 +1823,7 @@
 
         function startFallbackPolling() {
             if (!fallbackPollingInterval) {
-                fallbackPollingInterval = setInterval(fetchTelemetryRest, 1500);
+                fallbackPollingInterval = setInterval(fetchTelemetryRest, 3500);
             }
         }
 
@@ -1860,7 +1860,7 @@
                     document.getElementById('conn-status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
                     document.getElementById('conn-status-text').innerText = 'انقطع الاتصال';
                     startFallbackPolling();
-                    setTimeout(connectWebSocket, 2000);
+                    setTimeout(connectWebSocket, 4000);
                 };
 
                 ws.onerror = () => {
