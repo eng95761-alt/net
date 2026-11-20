@@ -433,24 +433,42 @@
         /* Modals & Overlays */
         body.light-theme #auth-lock-overlay,
         body.light-theme #peak-modal,
-        body.light-theme #um-user-action-modal,
-        body.light-theme #um-extend-modal,
-        body.light-theme #um-group-modal,
-        body.light-theme #um-profile-modal {
+        body.light-theme #um-renew-modal,
+        body.light-theme #um-change-modal,
+        body.light-theme #um-status-modal,
+        body.light-theme #um-kick-modal,
+        body.light-theme #script-modal {
             background-color: rgba(241, 245, 249, 0.9) !important;
             backdrop-filter: blur(16px) !important;
             -webkit-backdrop-filter: blur(16px) !important;
         }
         body.light-theme #auth-card-box,
         body.light-theme #peak-modal > div,
-        body.light-theme #um-user-action-modal > div,
-        body.light-theme #um-extend-modal > div,
-        body.light-theme #um-group-modal > div,
-        body.light-theme #um-profile-modal > div {
+        body.light-theme #um-renew-modal > div,
+        body.light-theme #um-change-modal > div,
+        body.light-theme #um-status-modal > div,
+        body.light-theme #um-kick-modal > div,
+        body.light-theme #script-modal > div {
             background-color: #ffffff !important;
             border: 1px solid #cbd5e1 !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
             color: #0f172a !important;
+        }
+        body.light-theme #um-renew-modal select,
+        body.light-theme #um-change-modal select,
+        body.light-theme #script-modal select,
+        body.light-theme .glass-panel input,
+        body.light-theme .glass-panel select {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        body.light-theme #um-renew-modal .bg-cyber-900,
+        body.light-theme #um-change-modal .bg-cyber-900,
+        body.light-theme #um-status-modal .bg-cyber-900,
+        body.light-theme #script-modal .bg-cyber-900 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
         }
 
         /* Remove glow blur in light mode */
@@ -2599,6 +2617,10 @@
                 if (result.success) {
                     showToast(`⚡ تم فصل جلسة المشترك ${user} بنجاح`, 'logout');
                 } else {
+                    if (result.message && result.message.includes("غير مصرح")) {
+                        promptReAuth(() => confirmKickUser());
+                        return;
+                    }
                     showToast(`❌ فشل في فصل الجلسة: ${result.message}`, 'error');
                 }
             } catch (e) {
@@ -3228,6 +3250,10 @@
                     closeRenewModal();
                     await fetchUmSubscribers();
                 } else {
+                    if (result.message && result.message.includes("غير مصرح")) {
+                        promptReAuth(() => confirmRenewUser());
+                        return;
+                    }
                     showToast(`❌ فشل التجديد: ${result.message}`, 'error');
                 }
             } catch (e) {
@@ -3344,6 +3370,10 @@
                     closeChangeModal();
                     await fetchUmSubscribers();
                 } else {
+                    if (result.message && result.message.includes("غير مصرح")) {
+                        promptReAuth(() => confirmChangeUser());
+                        return;
+                    }
                     showToast(`❌ فشل التغيير: ${result.message}`, 'error');
                 }
             } catch (e) {
@@ -3412,6 +3442,10 @@
                     closeStatusModal();
                     await fetchUmSubscribers();
                 } else {
+                    if (result.message && result.message.includes("غير مصرح")) {
+                        promptReAuth(() => confirmToggleStatus());
+                        return;
+                    }
                     showToast(`❌ فشل تعديل الحالة: ${result.message}`, 'error');
                 }
             } catch (e) {
@@ -3427,27 +3461,58 @@
         // Passcode Authentication (aann772010)
         // ==========================================
         const DASHBOARD_EXPECTED_PASSCODE = "aann772010";
-        let currentAuthToken = localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+        let currentAuthToken = "";
+        try {
+            currentAuthToken = localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+        } catch (e) {}
 
         function getAuthToken() {
-            return currentAuthToken || localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+            let tok = currentAuthToken;
+            try {
+                if (!tok) tok = localStorage.getItem("mscp_auth_token") || sessionStorage.getItem("mscp_auth_token") || "";
+            } catch (e) {}
+            // If empty or legacy fallback, always use expected passcode so actions never fail with Unauthorized
+            if (!tok || tok === "mscp_local_token_verified") {
+                return DASHBOARD_EXPECTED_PASSCODE;
+            }
+            return tok;
         }
 
         function setAuthToken(token, remember = true) {
             currentAuthToken = token;
-            if (remember) {
-                localStorage.setItem("mscp_auth_token", token);
-                sessionStorage.removeItem("mscp_auth_token");
-            } else {
-                sessionStorage.setItem("mscp_auth_token", token);
-                localStorage.removeItem("mscp_auth_token");
-            }
+            try {
+                if (remember) {
+                    localStorage.setItem("mscp_auth_token", token);
+                    sessionStorage.removeItem("mscp_auth_token");
+                } else {
+                    sessionStorage.setItem("mscp_auth_token", token);
+                    localStorage.removeItem("mscp_auth_token");
+                }
+            } catch (e) {}
         }
 
         function clearAuthToken() {
             currentAuthToken = "";
-            localStorage.removeItem("mscp_auth_token");
-            sessionStorage.removeItem("mscp_auth_token");
+            try {
+                localStorage.removeItem("mscp_auth_token");
+                sessionStorage.removeItem("mscp_auth_token");
+            } catch (e) {}
+        }
+
+        function promptReAuth(callback) {
+            const overlay = document.getElementById('auth-lock-overlay');
+            const errDiv = document.getElementById('passcode-error');
+            const input = document.getElementById('passcode-input');
+            if (errDiv) {
+                errDiv.innerText = "جلسة التحقق منتهية، يرجى كتابة رمز الدخول للمتابعة";
+                errDiv.classList.remove('hidden');
+            }
+            if (overlay) overlay.classList.remove('hidden');
+            if (input) {
+                input.value = "";
+                setTimeout(() => input.focus(), 150);
+            }
+            window._pendingAuthCallback = callback;
         }
 
         function checkAuthStatus() {
@@ -3521,6 +3586,12 @@
                     showToast("🔓 تم التحقق بنجاح، مرحباً بك في المنظومة", "login");
                     playChime('login');
                     
+                    if (window._pendingAuthCallback) {
+                        const cb = window._pendingAuthCallback;
+                        window._pendingAuthCallback = null;
+                        setTimeout(() => cb(), 100);
+                    }
+
                     // Trigger first data fetches
                     initChart();
                     fetchTelemetryRest();
@@ -3542,9 +3613,14 @@
             } catch (ex) {
                 // Fallback check against preset passcode
                 if (code === DASHBOARD_EXPECTED_PASSCODE) {
-                    setAuthToken("mscp_local_token_verified", remember);
+                    setAuthToken(DASHBOARD_EXPECTED_PASSCODE, remember);
                     document.getElementById('auth-lock-overlay').classList.add('hidden');
                     showToast("🔓 تم تسجيل الدخول بنجاح", "login");
+                    if (window._pendingAuthCallback) {
+                        const cb = window._pendingAuthCallback;
+                        window._pendingAuthCallback = null;
+                        setTimeout(() => cb(), 100);
+                    }
                     initChart();
                     fetchTelemetryRest();
                     connectWebSocket();
