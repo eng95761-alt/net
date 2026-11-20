@@ -388,6 +388,13 @@ class RouterMonitorWorker:
                     "badge": "دوري (كل دقيقتين)",
                     "badge_color": "cyan",
                     "icon": "fa-solid fa-shield-halved text-cyan-400"
+                },
+                "Script-Watchdog-BackToHome": {
+                    "title_ar": "حارس نفق Back To Home الذكي (VPN Watchdog)",
+                    "desc_ar": "يراقب سلامة نفق الوايرجارد مع سيرفر المراقبة وتطبيق الهاتف كل 3 دقائق، وفي حال انقطاع تبادل الإشارات لأكثر من 4 دقائق يقوم تلقائياً بإنعاش المنفذ وتحديث السحابة فوراً دون الحاجة لريبوت الراوتر.",
+                    "badge": "دوري (كل 3 دقائق)",
+                    "badge_color": "emerald",
+                    "icon": "fa-solid fa-shield-virus text-emerald-400"
                 }
             }
 
